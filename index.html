@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F6F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="看朋友">
+<title>Integrated Chinese — Study Companion</title>
+<link rel="manifest" id="manifest-link">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  --paper:#F4F6F3; --paper-2:#EAEFEA; --paper-3:#DFE6E0;
+  --ink:#1C2426; --ink-2:#4B5A5D; --ink-faint:#8A9699;
+  --line:#D2DBD6; --seal:#B8312F; --seal-2:#E8D7D2;
+  --jade:#2F7A63; --jade-2:#D6E8DF; --gold:#C99A3B; --gold-2:#F3E7CC;
+  --t1:#2F7A63; --t2:#2B6FAF; --t3:#8A4FBF; --t4:#B8312F; --t0:#8A9699;
+  --shadow:0 1px 2px rgba(20,30,30,.06),0 8px 24px -12px rgba(20,30,30,.18);
+  --radius:14px;
+  --zh:"Noto Serif SC","Noto Serif CJK SC","Songti SC","STSong","SimSun","PingFang SC","Microsoft YaHei",serif;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+[data-theme="dark"]{
+  --paper:#141A1B; --paper-2:#1C2426; --paper-3:#26302F;
+  --ink:#ECF0ED; --ink-2:#B7C2BE; --ink-faint:#748480;
+  --line:#2C3838; --seal:#D6524E; --seal-2:#3D2322;
+  --jade:#5FB394; --jade-2:#1F3A31; --gold:#E0B25C; --gold-2:#3A311C;
+  --t1:#5FB394; --t2:#6FA8E6; --t3:#B58BE0; --t4:#E0716C;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+body{min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,[tabindex]:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.zh{font-family:var(--zh)}
+.py{font-family:var(--serif);font-style:italic;color:var(--ink-2)}
+.hidden{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- app shell ---------- */
+#app{max-width:720px;margin:0 auto;padding:12px 16px 40px}
+header.top{display:flex;align-items:center;gap:10px;padding:8px 0 14px}
+header.top .brand{font-family:var(--serif);font-size:1.05rem;letter-spacing:.01em;color:var(--ink-2);flex:1;display:flex;align-items:baseline;gap:8px}
+header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
+.icon-btn{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-2);background:var(--paper-2)}
+.icon-btn:hover{background:var(--paper-3)}
+.icon-btn svg{width:20px;height:20px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--paper-2);font-size:.78rem;color:var(--ink-2)}
+.pill.seal{background:var(--seal-2);color:var(--seal)}
+.pill.jade{background:var(--jade-2);color:var(--jade)}
+.pill.gold{background:var(--gold-2);color:var(--gold)}
+
+/* ---------- home ---------- */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding:8px 0 22px}
+.hero .glyph{font-family:var(--zh);font-size:4.4rem;line-height:1;color:var(--ink);position:relative;padding-right:6px}
+.hero h1{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin:0 0 4px;letter-spacing:-.01em}
+.hero p{margin:0;color:var(--ink-2);font-size:.92rem}
+.streak-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+.chapter-card{display:block;width:100%;text-align:left;background:var(--paper-2);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:14px;position:relative;box-shadow:var(--shadow);transition:transform .15s}
+.chapter-card:hover{transform:translateY(-1px)}
+.chapter-card .num{font-family:var(--serif);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.chapter-card .ttl{font-family:var(--serif);font-size:1.35rem;margin:2px 0 2px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.chapter-card .ttl .zh{font-size:1.6rem}
+.chapter-card .blurb{color:var(--ink-2);font-size:.9rem;margin:4px 0 12px}
+.seal-chop{position:absolute;top:14px;right:14px;width:46px;height:46px;border:2px solid var(--seal);color:var(--seal);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--zh);font-size:1.5rem;transform:rotate(-6deg);opacity:.9}
+.seal-chop.done{background:var(--seal);color:#fff}
+.seal-chop.faint{opacity:.25;border-style:dashed}
+.bar{height:6px;background:var(--paper-3);border-radius:3px;overflow:hidden}
+.bar > i{display:block;height:100%;background:var(--jade);border-radius:3px;transition:width .4s}
+.bar.seal > i{background:var(--seal)}
+.resume-strip{display:flex;align-items:center;gap:12px;background:var(--gold-2);color:var(--ink);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.resume-strip button{margin-left:auto;background:var(--gold);color:#fff;padding:8px 14px;border-radius:9px;font-weight:600;white-space:nowrap}
+
+/* ---------- chapter page ---------- */
+.page-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:4px 0 4px}
+.page-title h2{font-family:var(--serif);font-weight:500;font-size:1.4rem;margin:0}
+.page-title .zh{font-size:1.9rem}
+.subtle{color:var(--ink-faint);font-size:.85rem}
+.section-h{font-family:var(--serif);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin:26px 0 10px;display:flex;align-items:center;gap:10px}
+.section-h::after{content:"";flex:1;height:1px;background:var(--line)}
+.row-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--paper-2);border-radius:12px;padding:12px 14px;margin-bottom:8px;transition:background .15s}
+.row-btn:hover{background:var(--paper-3)}
+.row-btn .lead{font-family:var(--zh);font-size:1.35rem;min-width:2.2em;text-align:center;color:var(--ink)}
+.row-btn .body{flex:1;min-width:0}
+.row-btn .body b{display:block;font-weight:600;font-size:.98rem}
+.row-btn .body small{display:block;color:var(--ink-2);font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-btn .meta{font-size:.78rem;color:var(--ink-faint);white-space:nowrap;text-align:right}
+.row-btn .meta .dots{display:flex;gap:3px;justify-content:flex-end;margin-top:3px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--paper-3)}
+.dot.ok{background:var(--jade)} .dot.bad{background:var(--seal)} .dot.part{background:var(--gold)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:480px){.grid-2{grid-template-columns:1fr}}
+.tile-btn{background:var(--paper-2);border-radius:12px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:2px;transition:background .15s}
+.tile-btn:hover{background:var(--paper-3)}
+.tile-btn b{font-weight:600}
+.tile-btn small{color:var(--ink-2);font-size:.82rem}
+.draft-note{background:var(--gold-2);color:var(--ink);border-left:3px solid var(--gold);padding:10px 12px;border-radius:8px;font-size:.86rem;margin:10px 0}
+
+/* ---------- session ---------- */
+.session-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.session-top .bar{flex:1}
+.session-top .count{font-family:var(--mono);font-size:.78rem;color:var(--ink-faint);min-width:52px;text-align:right}
+.nav-btn{width:34px;height:34px;border-radius:9px;background:var(--paper-2);color:var(--ink-2)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.card{background:var(--paper-2);border-radius:var(--radius);padding:22px 20px;box-shadow:var(--shadow);animation:pop .22s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.type-label{font-family:var(--serif);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--seal);margin-bottom:10px}
+.prompt-zh{font-family:var(--zh);font-size:1.85rem;line-height:1.5;margin:4px 0 4px;cursor:pointer}
+.prompt-zh .blank{display:inline-block;min-width:1.6em;border-bottom:2px solid var(--seal);color:var(--seal);text-align:center;margin:0 2px}
+.prompt-py{font-family:var(--serif);font-style:italic;color:var(--ink-2);font-size:1rem}
+.prompt-en{color:var(--ink-2);font-size:.95rem}
+.prompt-q{font-size:1.05rem;margin:8px 0 6px}
+.opts{display:grid;gap:8px;margin-top:16px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:1.05rem;transition:border-color .12s,background .12s}
+.opt .zh{font-size:1.25rem}
+.opt .key{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint);width:18px;flex:none}
+.opt:hover:not(:disabled){border-color:var(--ink-faint)}
+.opt.sel{border-color:var(--ink);background:var(--paper-3)}
+.opt.right{border-color:var(--jade);background:var(--jade-2)}
+.opt.wrong{border-color:var(--seal);background:var(--seal-2)}
+.opt:disabled{cursor:default}
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{padding:11px 18px;border-radius:11px;font-weight:600;background:var(--paper-3);color:var(--ink);transition:filter .12s}
+.btn:hover:not(:disabled){filter:brightness(.96)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.seal{background:var(--seal);color:#fff}
+.btn.jade{background:var(--jade);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;padding:8px 6px;font-weight:500}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.wide{flex:1;min-width:130px}
+.feedback{margin-top:16px;padding:12px 14px;border-radius:11px;font-size:.95rem;animation:pop .2s}
+.feedback.good{background:var(--jade-2);color:var(--jade)}
+.feedback.bad{background:var(--seal-2);color:var(--seal)}
+.feedback .why{display:block;color:var(--ink-2);margin-top:4px}
+.feedback .zh{font-size:1.15rem;color:var(--ink)}
+
+/* intro card */
+.intro .big{font-family:var(--zh);font-size:2.4rem;line-height:1.2;cursor:pointer}
+.intro .py-big{font-family:var(--serif);font-style:italic;color:var(--ink-2);margin-bottom:10px}
+.intro .summary{font-size:1rem;margin:6px 0 14px}
+.rule{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--line);font-size:.92rem}
+.rule .zh{font-size:1.1rem;color:var(--ink)}
+.ex{padding:10px 12px;border-radius:10px;background:var(--paper);margin-top:8px;cursor:pointer}
+.ex .zh{font-size:1.35rem}
+.ex .py{font-size:.9rem;display:block}
+.ex .en{font-size:.88rem;color:var(--ink-2)}
+
+/* word order */
+.answer-line{min-height:56px;display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px dashed var(--line);border-radius:12px;margin:14px 0 10px;align-items:center}
+.answer-line:empty::before{content:"Tap the tiles in order";color:var(--ink-faint);font-size:.85rem;padding:6px}
+.bank{display:flex;flex-wrap:wrap;gap:6px}
+.tile{font-family:var(--zh);font-size:1.3rem;padding:6px 12px;border-radius:9px;background:var(--paper);border:1.5px solid var(--line);transition:transform .1s}
+.tile:hover{transform:translateY(-1px)}
+.tile.used{opacity:.25;pointer-events:none}
+.answer-line .tile{background:var(--paper-3);border-color:transparent}
+.answer-line.right .tile{background:var(--jade-2);color:var(--jade)}
+.answer-line.wrong .tile{background:var(--seal-2);color:var(--seal)}
+
+/* position */
+.pos-line{display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-family:var(--zh);font-size:1.5rem;margin:14px 0}
+.pos-word{padding:4px 2px}
+.gap{width:22px;height:34px;border-radius:7px;border:1.5px dashed var(--ink-faint);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;color:var(--seal);transition:all .12s;margin:0 3px}
+.gap:hover{border-color:var(--seal);background:var(--seal-2)}
+.gap.sel{width:auto;padding:0 8px;border-style:solid;border-color:var(--seal);background:var(--seal-2)}
+.gap.right{border-color:var(--jade);background:var(--jade-2);color:var(--jade)}
+.gap.wrong{border-color:var(--seal);background:var(--seal-2)}
+
+/* speak */
+.speak-target{text-align:center;padding:10px 0 4px}
+.speak-target .prompt-zh{font-size:2.1rem}
+.mic-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:14px;background:var(--seal);color:#fff;font-weight:600;font-size:1.02rem;margin-top:14px}
+.mic-btn.listening{background:var(--ink);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,49,47,.35)}50%{box-shadow:0 0 0 12px rgba(184,49,47,0)}}
+.mic-status{text-align:center;color:var(--ink-2);font-size:.85rem;margin-top:8px;min-height:1.2em}
+.interim{text-align:center;font-family:var(--zh);font-size:1.3rem;color:var(--ink-faint);min-height:1.6em;margin-top:6px}
+.tc{margin-top:14px;padding:12px;background:var(--paper);border-radius:12px}
+.tc-row{display:flex;align-items:flex-start;gap:10px;margin:6px 0}
+.tc-label{font-family:var(--serif);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);width:64px;flex:none;padding-top:8px}
+.tc-chars{display:flex;flex-wrap:wrap;gap:4px}
+.tc-col{display:flex;flex-direction:column;align-items:center}
+.tc-ch{font-family:var(--zh);font-size:1.35rem;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--paper-2)}
+.tc-ch.ok{background:var(--jade-2);color:var(--jade)}
+.tc-ch.miss{background:var(--seal-2);color:var(--seal)}
+.tc-ch.blank{color:var(--ink-faint)}
+.tc-note{font-size:.6rem;color:var(--gold);margin-top:2px}
+.tc-pct{text-align:center;margin-top:8px;color:var(--ink-2);font-size:.9rem}
+.tc-pct b{font-size:1.2rem;color:var(--ink)}
+.tc-extra{font-size:.85rem;color:var(--ink-2);text-align:center;margin-top:4px}
+
+/* tones */
+.tone-opts .opt{font-family:var(--mono);font-size:1rem;justify-content:center}
+.tone-py{display:flex;gap:10px;justify-content:center;font-family:var(--serif);font-size:1.4rem;margin:8px 0}
+.tone-py span{padding:4px 10px;border-radius:8px;background:var(--paper)}
+.t1{color:var(--t1)} .t2{color:var(--t2)} .t3{color:var(--t3)} .t4{color:var(--t4)} .t0{color:var(--t0)}
+
+/* free */
+textarea.free{width:100%;min-height:84px;font:inherit;font-family:var(--zh);font-size:1.3rem;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);resize:vertical;margin-top:12px}
+textarea.free.en{font-family:var(--sans);font-size:1rem}
+.model-answers{margin-top:12px;padding:12px;background:var(--paper);border-radius:12px}
+.model-answers .zh{font-size:1.3rem;display:block;cursor:pointer}
+.ai-feedback{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--gold-2);font-size:.95rem;white-space:pre-wrap}
+
+/* dialogue reader */
+.dlg-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.toggle{padding:7px 12px;border-radius:999px;background:var(--paper-2);font-size:.84rem;color:var(--ink-2);border:1.5px solid transparent}
+.toggle.on{border-color:var(--ink);color:var(--ink)}
+.line{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.line .who{font-family:var(--zh);font-size:.95rem;color:var(--seal);width:3.4em;padding-top:8px;text-align:right}
+.line .who.narr{color:var(--ink-faint)}
+.line .zh{font-size:1.45rem;line-height:1.5;cursor:pointer}
+.line .py{display:block;font-size:.9rem}
+.line .en{font-size:.88rem;color:var(--ink-2)}
+.line.playing .zh{color:var(--seal)}
+.line.mine{background:var(--gold-2);border-radius:10px;padding:10px;border-top:0;margin:4px 0}
+
+/* vocab list */
+.vrow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.vrow .zh{font-size:1.5rem;cursor:pointer;min-width:3em}
+.vrow .py{display:block;font-size:.92rem}
+.vrow .en{font-size:.88rem;color:var(--ink-2)}
+
+/* writing */
+.writer-wrap{display:grid;grid-template-columns:1fr;gap:12px;justify-items:center}
+#writer{width:260px;height:260px;background:var(--paper);border-radius:14px;position:relative;overflow:hidden}
+#writer svg{width:100%;height:100%}
+.char-picker{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.char-picker .tile{font-size:1.2rem;padding:4px 9px}
+.char-picker .tile.sel{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* settings */
+.set-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.set-row .body{flex:1}
+.set-row .body b{display:block;font-weight:600}
+.set-row .body small{color:var(--ink-2);font-size:.82rem}
+.switch{width:46px;height:26px;border-radius:13px;background:var(--paper-3);position:relative;flex:none;transition:background .15s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch.on{background:var(--jade)} .switch.on::after{left:23px}
+input[type=text],input[type=password],select{font:inherit;padding:8px 10px;border-radius:9px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+input[type=range]{width:120px}
+
+/* complete */
+.complete{text-align:center;padding:24px 0 10px}
+.complete .score{font-family:var(--serif);font-size:3.2rem;line-height:1;margin:6px 0}
+.complete .zh{font-size:2rem;margin-bottom:6px}
+.stat-row{display:flex;justify-content:center;gap:18px;color:var(--ink-2);font-size:.9rem;margin:10px 0 18px}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;font-size:.9rem;box-shadow:var(--shadow);z-index:50;animation:pop .2s}
+.kbd{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint)}
+.err{background:var(--seal-2);color:var(--seal);padding:12px;border-radius:10px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="chapter5.js"></script>
+<script src="chapter6.js"></script>
+<script>
+/* ============================================================
+   APP CORE
+   ============================================================ */
+'use strict';
+const CH = (window.IC_CHAPTERS||[]).slice().sort((a,b)=>a.number-b.number);
+const $ = sel => document.querySelector(sel);
+const app = $('#app');
+const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const jsq = s => JSON.stringify(String(s??''));   // safe for inline handlers
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const todayKey = () => new Date().toISOString().slice(0,10);
+
+/* ---------- settings ---------- */
+const DEF_SET = { script:'s', pinyin:'show', english:'show', rate:0.85, record:true, theme:'auto', apiKey:'', model:'claude-haiku-4-5-20251001' };
+let SET = Object.assign({}, DEF_SET, safeJSON(localStorage.getItem('ic_settings'))||{});
+function saveSet(){ localStorage.setItem('ic_settings', JSON.stringify(SET)); applyTheme(); }
+function safeJSON(s){ try{ return s?JSON.parse(s):null; }catch(e){ return null; } }
+function applyTheme(){
+  const dark = SET.theme==='dark' || (SET.theme==='auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark?'dark':'light';
+  $('meta[name=theme-color]').content = dark?'#141A1B':'#F4F6F3';
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+
+/* script helpers: pick simplified/traditional */
+const Z = (o, sKey='zh', tKey='zt') => (SET.script==='t' && o && o[tKey]) ? o[tKey] : (o ? o[sKey] : '');
+const ZV = v => SET.script==='t' ? v.t : v.s;
+const ZW = (p) => (SET.script==='t' && p.wt) ? p.wt : p.words;
+
+/* ---------- progress ---------- */
+let PROG = safeJSON(localStorage.getItem('ic_progress')) || { results:{}, days:{}, sessions:0 };
+function saveProg(){ localStorage.setItem('ic_progress', JSON.stringify(PROG)); }
+function record(id, ok){
+  const r = PROG.results[id] || { n:0, ok:0, last:null, run:0 };
+  r.n++; if(ok) r.ok++; r.last = ok?1:0; r.run = ok ? r.run+1 : 0; r.at = Date.now();
+  PROG.results[id] = r;
+  PROG.days[todayKey()] = (PROG.days[todayKey()]||0)+1;
+  saveProg();
+}
+function mastery(ids){
+  if(!ids.length) return 0;
+  let s=0; ids.forEach(id=>{ const r=PROG.results[id]; if(r){ s += Math.min(1, r.run/2) ; } });
+  return s/ids.length;
+}
+function streak(){
+  let n=0; const d=new Date();
+  for(;;){ const k=d.toISOString().slice(0,10); if(PROG.days[k]){ n++; d.setDate(d.getDate()-1); } else break; }
+  return n;
+}
+function weakIds(){
+  return Object.entries(PROG.results).filter(([id,r])=> r.last===0 || (r.n>=2 && r.ok/r.n<0.6)).map(([id])=>id);
+}
+
+/* ---------- pinyin utilities (for tone drill and homophone check) ---------- */
+const TONE_MAP = {ā:['a',1],á:['a',2],ǎ:['a',3],à:['a',4],ē:['e',1],é:['e',2],ě:['e',3],è:['e',4],ī:['i',1],í:['i',2],ǐ:['i',3],ì:['i',4],ō:['o',1],ó:['o',2],ǒ:['o',3],ò:['o',4],ū:['u',1],ú:['u',2],ǔ:['u',3],ù:['u',4],ǖ:['ü',1],ǘ:['ü',2],ǚ:['ü',3],ǜ:['ü',4]};
+const VOW='aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ';
+const SYL_RE=new RegExp('([bpmfdtnlgkhjqxzcsryw]*)(['+VOW+']+)(ngr|nr|ng|n|r)?(?![' + VOW + '])','gi');
+function syllables(py){
+  const out=[]; let m; SYL_RE.lastIndex=0;
+  while((m=SYL_RE.exec(py))) out.push(m[0]);
+  return out;
+}
+function toneOf(syl){ for(const c of syl){ if(TONE_MAP[c]) return TONE_MAP[c][1]; } return 0; }
+function stripTone(syl){ return [...syl].map(c=>TONE_MAP[c]?TONE_MAP[c][0]:c).join(''); }
+
+/* character → pinyin map built from every chapter's vocab and examples */
+const HP = {};
+(function buildHP(){
+  CH.forEach(ch=>{
+    ch.vocab.forEach(v=>{
+      const chars=[...v.s.replace(/[()（）]/g,'')];
+      const syls=syllables(v.py);
+      if(chars.length===syls.length) chars.forEach((c,i)=>{ HP[c]=HP[c]||syls[i]; });
+      else if(chars.length===1) HP[chars[0]]=HP[chars[0]]||v.py;
+    });
+  });
+})();
+</script>
+<script>
+/* ============================================================
+   SPEECH ENGINE
+   Rewritten for reliability:
+   - voices loaded via promise (getVoices + voiceschanged + retry)
+   - speak() is a queue-free, cancel-then-speak with a short gap so
+     Chrome does not drop the new utterance
+   - Chrome keep-alive (pause/resume) only while an utterance is live
+   - iOS/Safari unlock on first user gesture
+   - one mic session at a time, no auto-restart loops, explicit teardown
+   ============================================================ */
+const TTS = {
+  voice:null, voices:[], ready:null, unlocked:false, _live:null, _keep:null,
+  init(){
+    if(!('speechSynthesis' in window)) { this.ready = Promise.resolve(false); return; }
+    this.ready = new Promise(res=>{
+      let tries=0;
+      const grab=()=>{
+        const vs=speechSynthesis.getVoices();
+        if(vs.length){ this.voices=vs; this.voice=this.pick(vs); res(true); return true; }
+        return false;
+      };
+      if(grab()) return;
+      speechSynthesis.addEventListener('voiceschanged', ()=>grab(), {once:false});
+      const iv=setInterval(()=>{ if(grab()||++tries>25){ clearInterval(iv); if(!this.voice) res(false); } }, 200);
+    });
+    // Safari/iOS need a user gesture before audio plays
+    const unlock=()=>{ if(this.unlocked) return; this.unlocked=true;
+      try{ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); }catch(e){}
+      document.removeEventListener('touchend',unlock); document.removeEventListener('click',unlock); };
+    document.addEventListener('touchend',unlock,{passive:true}); document.addEventListener('click',unlock);
+  },
+  pick(vs){
+    const want = SET.script==='t' ? ['zh-tw','zh-hk','zh-cn','zh'] : ['zh-cn','zh','zh-tw','zh-hk'];
+    const zh = vs.filter(v=>/^zh|^cmn|chinese/i.test(v.lang+' '+v.name));
+    for(const tag of want){
+      const local = zh.find(v=>v.lang.toLowerCase().replace('_','-').startsWith(tag) && v.localService);
+      if(local) return local;
+      const any = zh.find(v=>v.lang.toLowerCase().replace('_','-').startsWith(tag));
+      if(any) return any;
+    }
+    return zh[0]||null;
+  },
+  available(){ return !!(window.speechSynthesis && this.voice); },
+  stop(){ try{ speechSynthesis.cancel(); }catch(e){} this._live=null; this._stopKeep(); },
+  _stopKeep(){ if(this._keep){ clearInterval(this._keep); this._keep=null; } },
+  speak(text, opts={}){
+    return new Promise(async (resolve)=>{
+      if(!('speechSynthesis' in window)) return resolve(false);
+      await this.ready;
+      if(!this.voice) this.voice=this.pick(speechSynthesis.getVoices());
+      this.stop();
+      const u=new SpeechSynthesisUtterance(String(text));
+      if(this.voice) u.voice=this.voice;
+      u.lang=(this.voice&&this.voice.lang)||'zh-CN';
+      u.rate=opts.rate ?? SET.rate; u.pitch=1;
+      let done=false; const finish=(ok)=>{ if(done) return; done=true; this._stopKeep(); if(this._live===u) this._live=null; resolve(ok); };
+      u.onend=()=>finish(true); u.onerror=(e)=>finish(e.error==='interrupted'||e.error==='canceled');
+      this._live=u;
+      // Chrome pauses long utterances after ~15s; nudge it while speaking (desktop Chrome only)
+      const isChromeDesktop=/Chrome/.test(navigator.userAgent)&&!/Mobile|Android/.test(navigator.userAgent);
+      setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){ finish(false); }
+        if(isChromeDesktop){ this._keep=setInterval(()=>{ if(speechSynthesis.speaking){ speechSynthesis.pause(); speechSynthesis.resume(); } else this._stopKeep(); }, 9000); }
+        // safety: if nothing fires in 20s, resolve
+        setTimeout(()=>finish(true), 20000);
+      }, 60);
+    });
+  }
+};
+TTS.init();
+function say(text){ TTS.speak(text); }
+
+/* ---------- transcript comparison (kept from the original app) ---------- */
+function alignChars(e,h){
+  const n=e.length,m=h.length,dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+  for(let i=0;i<=n;i++)dp[i][0]=i; for(let j=0;j<=m;j++)dp[0][j]=j;
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++) dp[i][j]= e[i-1]===h[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1]);
+  let i=n,j=m; const ops=[];
+  while(i>0||j>0){
+    if(i>0&&j>0&&e[i-1]===h[j-1]&&dp[i][j]===dp[i-1][j-1]){ops.push({t:'m',e:e[i-1],h:h[j-1]});i--;j--;}
+    else if(i>0&&j>0&&dp[i][j]===dp[i-1][j-1]+1){ops.push({t:'s',e:e[i-1],h:h[j-1]});i--;j--;}
+    else if(i>0&&dp[i][j]===dp[i-1][j]+1){ops.push({t:'d',e:e[i-1]});i--;}
+    else {ops.push({t:'i',h:h[j-1]});j--;}
+  }
+  return ops.reverse();
+}
+function compareTranscript(expected, heard){
+  const norm=s=>[...String(s||'').replace(/[。，？！、,.?!'"\s]/g,'')];
+  const eA=norm(expected), hA=norm(heard);
+  if(!hA.length) return {row:eA.map(c=>({e:c,h:null,ok:false})),extras:[],pct:0};
+  const row=[],extras=[]; let match=0;
+  alignChars(eA,hA).forEach(op=>{
+    if(op.t==='m'){match++;row.push({e:op.e,h:op.h,ok:true});}
+    else if(op.t==='s'){
+      // homophone (same syllable AND tone) counts as a match: acoustically identical
+      const a=HP[op.e],b=HP[op.h]; let homo=false;
+      if(a&&b&&stripTone(a)===stripTone(b)&&toneOf(a)===toneOf(b)) homo=true;
+      if(homo) match++;
+      row.push({e:op.e,h:op.h,ok:homo,homo});
+    } else if(op.t==='d') row.push({e:op.e,h:null,ok:false});
+    else extras.push(op.h);
+  });
+  return {row,extras,pct:Math.round(match/(eA.length||1)*100)};
+}
+function renderCompare(expected, heard){
+  if(!heard) return `<div class="tc"><div class="tc-pct" style="color:var(--ink-faint)">Nothing recognized. Try again, speak a little louder, or self-report below.</div></div>`;
+  const r=compareTranscript(expected,heard);
+  const col=(ch,cls,note='')=>`<span class="tc-col"><span class="tc-ch ${cls}" onclick="say(${jsq(ch)})">${esc(ch)}</span>${note}</span>`;
+  const heardHtml=r.row.map(it=> it.h ? col(it.h, it.ok?'ok':'miss') : `<span class="tc-col"><span class="tc-ch blank">—</span></span>`).join('');
+  const expHtml=r.row.map(it=> col(it.e, it.ok?'ok':'miss', it.homo?'<span class="tc-note">same sound</span>':'')).join('');
+  const extra=r.extras.length?`<div class="tc-extra">also heard: <span class="zh" onclick="say(${jsq(r.extras.join(''))})">${esc(r.extras.join(''))}</span></div>`:'';
+  return `<div class="tc">
+    <div class="tc-row"><span class="tc-label">Heard</span><span class="tc-chars">${heardHtml}</span></div>
+    <div class="tc-row"><span class="tc-label">Target</span><span class="tc-chars">${expHtml}</span></div>
+    ${extra}
+    <div class="tc-pct"><b>${r.pct}%</b> exact match · tap any character to hear it</div>
+  </div>`;
+}
+
+/* ---------- microphone session ---------- */
+const MIC = {
+  SR: window.SpeechRecognition||window.webkitSpeechRecognition||null,
+  rec:null, recorder:null, stream:null, chunks:[], url:null, active:false, final:'', interim:'', timer:null, onUpdate:null, onDone:null,
+  supported(){ return !!this.SR; },
+  canRecord(){ return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder); },
+  async start(opts){
+    if(this.active) return;
+    this.teardown(false);
+    this.active=true; this.final=''; this.interim=''; this.onUpdate=opts.onUpdate; this.onDone=opts.onDone;
+    TTS.stop();
+    // audio recording for playback (optional)
+    if(SET.record && this.canRecord()){
+      try{
+        this.stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        this.chunks=[]; this.recorder=new MediaRecorder(this.stream);
+        this.recorder.ondataavailable=e=>{ if(e.data&&e.data.size) this.chunks.push(e.data); };
+        this.recorder.start();
+      }catch(e){ this.recorder=null; }
+    }
+    if(!this.SR){ this._finish('unsupported'); return; }
+    const r=new this.SR(); this.rec=r;
+    r.lang=SET.script==='t'?'zh-TW':'zh-CN'; r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
+    r.onresult=e=>{ let f='',i='';
+      for(let k=0;k<e.results.length;k++){ const t=e.results[k][0].transcript; if(e.results[k].isFinal) f+=t; else i+=t; }
+      this.final=f; this.interim=i; this.onUpdate&&this.onUpdate({final:f,interim:i,status:'Listening…'}); };
+    r.onerror=e=>{ const map={'not-allowed':'Microphone blocked. Allow mic access in your browser settings.','no-speech':'No speech detected.','network':'Speech recognition needs an internet connection.','audio-capture':'No microphone found.','aborted':''};
+      this._err = map[e.error] ?? ('Recognition error: '+e.error); };
+    r.onend=()=>this._finish();
+    try{ r.start(); this.onUpdate&&this.onUpdate({final:'',interim:'',status:'Listening… speak now'}); }
+    catch(e){ this._err='Could not start the microphone.'; this._finish(); }
+    this.timer=setTimeout(()=>this.stop(), 9000);
+  },
+  stop(){ if(!this.active) return; try{ this.rec&&this.rec.stop(); }catch(e){} if(!this.SR) this._finish(); },
+  _finish(reason){
+    if(!this.active) return; this.active=false;
+    clearTimeout(this.timer);
+    const done=()=>{ const cb=this.onDone; this.onDone=null; cb&&cb({heard:(this.final||this.interim||'').trim(), error:this._err||(reason==='unsupported'?'Speech recognition is not available in this browser (Chrome, Edge and Safari support it).':null), audio:this.url}); this._err=null; };
+    if(this.recorder&&this.recorder.state!=='inactive'){
+      this.recorder.onstop=()=>{ if(this.chunks.length){ if(this.url) URL.revokeObjectURL(this.url); this.url=URL.createObjectURL(new Blob(this.chunks,{type:this.recorder.mimeType||'audio/webm'})); } this._releaseStream(); done(); };
+      try{ this.recorder.stop(); }catch(e){ this._releaseStream(); done(); }
+    } else { this._releaseStream(); done(); }
+  },
+  _releaseStream(){ if(this.stream){ this.stream.getTracks().forEach(t=>t.stop()); this.stream=null; } this.recorder=null; },
+  teardown(revoke=true){ clearTimeout(this.timer); try{ this.rec&&this.rec.abort(); }catch(e){} this.rec=null; this.active=false; this.onDone=null; this.onUpdate=null;
+    if(this.recorder&&this.recorder.state!=='inactive'){ try{ this.recorder.onstop=null; this.recorder.stop(); }catch(e){} }
+    this._releaseStream(); if(revoke&&this.url){ URL.revokeObjectURL(this.url); this.url=null; } }
+};
+let _playback=null;
+function playback(url){ if(_playback){ _playback.pause(); } TTS.stop(); _playback=new Audio(url); _playback.play().catch(()=>toast('Could not play the recording.')); }
+</script>
+<script>
+/* ============================================================
+   PROMPT REGISTRY & SESSION BUILDER
+   ============================================================ */
+const PROMPTS = {};   // id -> prompt
+function reg(p){ PROMPTS[p.id]=p; return p; }
+function chapterPrompts(ch){
+  const out=[];
+  ch.grammar.forEach(g=>g.exercises.forEach((ex,i)=>out.push(reg(Object.assign({},ex,{id:`${ch.id}:${g.id}:${i}`,gid:g.id,ch:ch.id})))));
+  (ch.comprehension||[]).forEach((c,i)=>out.push(reg(Object.assign({t:'mc',label:'Comprehension'},c,{id:`${ch.id}:comp:${i}`,ch:ch.id}))));
+  (ch.measureWords||[]).forEach((m,i)=>out.push(reg({t:'fill',label:'Measure word',zh:`一___${m.noun}`,zt:`一___${m.nt||m.noun}`,opts:uniq([m.mw,...shuffle(ch.measureDistractors||['个','本','杯','瓶']).filter(x=>x!==m.mw).slice(0,3)]),ans:m.mw,py:m.py,en:m.en,why:`${m.mw} is the measure word for ${m.noun}.`,id:`${ch.id}:mw:${i}`,ch:ch.id})));
+  ch.vocab.forEach((v,i)=>{ if(v.name) return; const syls=syllables(v.py); if(!syls.length||syls.length>3) return;
+    out.push(reg({t:'tone',label:'Tone drill',v,syls,id:`${ch.id}:tone:${i}`,ch:ch.id})); });
+  (ch.free||[]).forEach((f,i)=>out.push(reg(Object.assign({t:'free',label:'Translate'},f,{id:`${ch.id}:free:${i}`,ch:ch.id}))));
+  ch.dialogues.forEach(d=>d.lines.forEach((l,i)=>out.push(reg({t:'speak',label:'Shadow the line',zh:l.zh,zt:l.zt,py:l.py,en:l.en,who:l.who,id:`${ch.id}:${d.id}:${i}`,ch:ch.id,did:d.id}))));
+  return out;
+}
+CH.forEach(chapterPrompts);
+function uniq(a){ return [...new Set(a)]; }
+const idsFor=(ch,pred)=>Object.values(PROMPTS).filter(p=>p.ch===ch.id&&pred(p)).map(p=>p.id);
+const grammarIds=(ch,g)=>idsFor(ch,p=>p.gid===g.id&&p.t!=='intro');
+
+function buildQueue(ch, mode, arg){
+  const P=id=>PROMPTS[id]; const all=Object.values(PROMPTS).filter(p=>p.ch===ch.id);
+  switch(mode){
+    case 'grammar': { const g=ch.grammar[arg]; return [reg({t:'intro',id:`${ch.id}:${g.id}:intro`,g,ch:ch.id}), ...all.filter(p=>p.gid===g.id)]; }
+    case 'review': return shuffle([
+        ...shuffle(all.filter(p=>p.gid&&p.t!=='speak')).slice(0,10),
+        ...shuffle(all.filter(p=>p.gid&&p.t==='speak')).slice(0,2),
+        ...shuffle(all.filter(p=>p.id.includes(':comp:'))).slice(0,3),
+        ...shuffle(all.filter(p=>p.t==='tone')).slice(0,3),
+        ...shuffle(all.filter(p=>p.id.includes(':mw:'))).slice(0,2)]);
+    case 'weak': { const w=new Set(weakIds()); return shuffle(all.filter(p=>w.has(p.id))).slice(0,15); }
+    case 'tone': return shuffle(all.filter(p=>p.t==='tone')).slice(0,12);
+    case 'mw': return shuffle(all.filter(p=>p.id.includes(':mw:')));
+    case 'comp': return all.filter(p=>p.id.includes(':comp:'));
+    case 'free': return all.filter(p=>p.t==='free');
+    case 'shadow': return all.filter(p=>p.did===arg);
+    case 'roleplay': { const [did,role]=arg.split('|'); const d=ch.dialogues.find(x=>x.id===did);
+      return d.lines.map((l,i)=> l.who===role ? P(`${ch.id}:${did}:${i}`) : {t:'listen',id:`${ch.id}:${did}:${i}:listen`,line:l,ch:ch.id}); }
+  }
+  return [];
+}
+const MODE_LABELS={grammar:'Grammar',review:'Chapter review',weak:'Weak spots',tone:'Tone drill',mw:'Measure words',comp:'Comprehension',free:'Translation',shadow:'Shadowing',roleplay:'Role-play'};
+
+/* ============================================================
+   VIEW STATE
+   ============================================================ */
+let V = { view:'home', ch:0 };
+let SS = null;   // session state
+function go(view, extra={}){ MIC.teardown(); TTS.stop(); V=Object.assign({view},extra); window.scrollTo(0,0); render(); }
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+
+function startSession(chIdx, mode, arg){
+  const ch=CH[chIdx]; const queue=buildQueue(ch,mode,arg);
+  if(!queue.length){ toast('Nothing to practise here yet.'); return; }
+  const label = mode==='grammar'?ch.grammar[arg].title : mode==='shadow'||mode==='roleplay' ? ch.dialogues.find(d=>d.id===String(arg).split('|')[0]).title : MODE_LABELS[mode];
+  SS={chIdx,mode,arg,label,ids:queue.map(p=>p.id),idx:0,correct:0,scored:0,hist:[],fwd:[],cur:freshCur()};
+  // roleplay needs the listen prompts, which are not in the registry
+  if(mode==='roleplay') SS.extra=Object.fromEntries(queue.filter(p=>p.t==='listen').map(p=>[p.id,p]));
+  saveResume(); go('session');
+}
+function freshCur(){ return {answered:false,sel:null,wo:[],pos:null,heard:null,audio:null,status:'',interim:'',ok:null,free:'',ai:null,showAns:false}; }
+function curPrompt(){ const id=SS.ids[SS.idx]; return PROMPTS[id]||(SS.extra&&SS.extra[id])||null; }
+function saveResume(){ if(!SS){ localStorage.removeItem('ic_resume'); return; } const s=Object.assign({},SS,{cur:Object.assign({},SS.cur,{audio:null})}); localStorage.setItem('ic_resume',JSON.stringify(s)); }
+function loadResume(){ return safeJSON(localStorage.getItem('ic_resume')); }
+function resumeSession(){ const s=loadResume(); if(!s) return; SS=s; SS.cur=Object.assign(freshCur(),SS.cur,{audio:null}); if(SS.mode==='roleplay'){ const ch=CH[SS.chIdx]; SS.extra=Object.fromEntries(buildQueue(ch,'roleplay',SS.arg).filter(p=>p.t==='listen').map(p=>[p.id,p])); } go('session'); }
+
+function scoreCurrent(ok){
+  const p=curPrompt(); if(!p||SS.cur.answered) return;
+  SS.cur.answered=true; SS.cur.ok=ok;
+  if(p.t!=='intro'&&p.t!=='listen'){ SS.scored++; if(ok) SS.correct++; record(p.id,ok); }
+  saveResume(); render();
+}
+function nextPrompt(){
+  MIC.teardown(); TTS.stop();
+  SS.hist.push(JSON.stringify({idx:SS.idx,cur:Object.assign({},SS.cur,{audio:null})})); SS.fwd=[];
+  if(SS.idx>=SS.ids.length-1){ SS.done=true; PROG.sessions++; saveProg(); localStorage.removeItem('ic_resume'); render(); return; }
+  SS.idx++; SS.cur=freshCur(); saveResume(); window.scrollTo(0,0); render();
+}
+function navBack(){ if(!SS.hist.length) return; MIC.teardown(); TTS.stop(); SS.fwd.push(JSON.stringify({idx:SS.idx,cur:Object.assign({},SS.cur,{audio:null})})); const s=JSON.parse(SS.hist.pop()); SS.idx=s.idx; SS.cur=Object.assign(freshCur(),s.cur); SS.done=false; render(); }
+function navFwd(){ if(!SS.fwd.length) return; MIC.teardown(); TTS.stop(); SS.hist.push(JSON.stringify({idx:SS.idx,cur:Object.assign({},SS.cur,{audio:null})})); const s=JSON.parse(SS.fwd.pop()); SS.idx=s.idx; SS.cur=Object.assign(freshCur(),s.cur); render(); }
+function quitSession(){ if(confirm('Leave this session? Your place is saved so you can resume.')){ saveResume(); go('chapter',{ch:SS.chIdx}); } }
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render(){
+  try{
+    let html='';
+    switch(V.view){
+      case 'home': html=renderHome(); break;
+      case 'chapter': html=renderChapter(CH[V.ch]); break;
+      case 'session': html=renderSession(); break;
+      case 'dialogue': html=renderDialogue(CH[V.ch], V.did); break;
+      case 'vocab': html=renderVocab(CH[V.ch]); break;
+      case 'writing': html=renderWriting(CH[V.ch]); break;
+      case 'settings': html=renderSettings(); break;
+    }
+    app.innerHTML=html;
+    if(V.view==='writing') initWriter();
+    if(V.view==='session') afterSessionRender();
+  }catch(e){ console.error(e); app.innerHTML=`<div class="err"><b>Something went wrong.</b><br>${esc(e.message)}<br><button class="btn" style="margin-top:10px" onclick="localStorage.removeItem('ic_resume');go('home')">Back to start</button></div>`; }
+}
+const ICONS={ back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>', gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>', sound:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18.5 5.5a9 9 0 010 13"/></svg>', mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0M12 17v4"/></svg>' };
+function topbar(back, title){
+  return `<header class="top">
+    ${back?`<button class="icon-btn" onclick="${back}" aria-label="Back">${ICONS.back}</button>`:''}
+    <div class="brand">${title||'<span class="zh">中文</span> Integrated Chinese'}</div>
+    <button class="icon-btn" onclick="go('settings',{from:V})" aria-label="Settings">${ICONS.gear}</button>
+  </header>`;
+}
+
+/* ---------- home ---------- */
+function renderHome(){
+  const res=loadResume();
+  const strip = res&&!res.done ? `<div class="resume-strip"><div><b>Continue</b><br><small class="subtle">${esc(CH[res.chIdx].title)} · ${esc(res.label)} · ${res.idx+1}/${res.ids.length}</small></div><button onclick="resumeSession()">Resume</button></div>`:'';
+  const s=streak(), today=PROG.days[todayKey()]||0;
+  return topbar(null)+`
+  <section class="hero">
+    <div class="glyph">学</div>
+    <div><h1>Integrated Chinese, Level 1 Part 1</h1><p>Grammar, dialogues, tones and speaking practice, chapter by chapter.</p>
+      <div class="streak-row"><span class="pill ${s?'seal':''}">${s} day streak</span><span class="pill">${today} answers today</span><span class="pill">${Object.keys(PROG.results).length} prompts seen</span></div></div>
+  </section>
+  ${strip}
+  ${CH.map((ch,i)=>{ const ids=idsFor(ch,p=>p.gid); const m=mastery(ids);
+    return `<button class="chapter-card" onclick="go('chapter',{ch:${i}})">
+      <div class="num">Chapter ${ch.number}${ch.draft?' · draft':''}</div>
+      <div class="ttl"><span class="zh">${esc(Z(ch))}</span><span>${esc(ch.title)}</span></div>
+      <div class="blurb">${esc(ch.blurb||'')}</div>
+      <div class="bar"><i style="width:${Math.round(m*100)}%"></i></div>
+      <div class="seal-chop ${m>=0.95?'done':m===0?'faint':''}">${m>=0.95?'完':'习'}</div>
+    </button>`; }).join('')}
+  <p class="subtle" style="margin-top:20px">Sessions completed: ${PROG.sessions||0}. Progress is stored in this browser; export a backup from settings.</p>`;
+}
+
+/* ---------- chapter ---------- */
+function renderChapter(ch){
+  const dots=ids=>`<div class="dots">${ids.slice(0,8).map(id=>{const r=PROG.results[id]; return `<i class="dot ${!r?'':r.run>=2?'ok':r.last?'part':'bad'}"></i>`;}).join('')}</div>`;
+  const weak=weakIds().filter(id=>PROMPTS[id]&&PROMPTS[id].ch===ch.id).length;
+  return topbar("go('home')")+`
+  <div class="page-title"><span class="zh">${esc(Z(ch))}</span><h2>Chapter ${ch.number}: ${esc(ch.title)}</h2></div>
+  <p class="subtle">${esc(ch.blurb||'')}</p>
+  ${ch.draft?`<div class="draft-note">This chapter was drafted from the textbook outline. Check the vocabulary and dialogue against your book and edit <code>chapter${ch.number}.js</code> where it differs.</div>`:''}
+
+  <div class="section-h">Grammar</div>
+  ${ch.grammar.map((g,i)=>{ const ids=grammarIds(ch,g); const m=mastery(ids);
+    return `<button class="row-btn" onclick="startSession(${V.ch},'grammar',${i})"><span class="lead">${esc(Z(g).split(' ')[0])}</span><span class="body"><b>${esc(g.title)}</b><small>${esc(g.summary)}</small></span><span class="meta">${Math.round(m*100)}%${dots(ids)}</span></button>`; }).join('')}
+
+  <div class="section-h">Dialogue</div>
+  ${ch.dialogues.map(d=>`<button class="row-btn" onclick="go('dialogue',{ch:${V.ch},did:'${d.id}'})"><span class="lead">话</span><span class="body"><b>${esc(d.title)}</b><small>Read, listen, shadow, or role-play</small></span><span class="meta">${d.lines.length} lines</span></button>`).join('')}
+  <button class="row-btn" onclick="startSession(${V.ch},'comp')"><span class="lead">问</span><span class="body"><b>Comprehension questions</b><small>Check you followed the story</small></span><span class="meta">${Math.round(mastery(idsFor(ch,p=>p.id.includes(':comp:')))*100)}%</span></button>
+
+  <div class="section-h">Drills</div>
+  <div class="grid-2">
+    <button class="tile-btn" onclick="startSession(${V.ch},'tone')"><b>Tone drill</b><small>Hear a word, pick its tones</small></button>
+    <button class="tile-btn" onclick="startSession(${V.ch},'mw')"><b>Measure words</b><small>${(ch.measureWords||[]).map(m=>m.mw).filter((x,i,a)=>a.indexOf(x)===i).join(' · ')}</small></button>
+    <button class="tile-btn" onclick="startSession(${V.ch},'free')"><b>Translate freely</b><small>Type it out, compare or get AI feedback</small></button>
+    <button class="tile-btn" onclick="go('writing',{ch:${V.ch}})"><b>Write characters</b><small>Stroke order and tracing</small></button>
+    <button class="tile-btn" onclick="go('vocab',{ch:${V.ch}})"><b>Vocabulary reference</b><small>${ch.vocab.length} words, tap to hear</small></button>
+    <button class="tile-btn" onclick="startSession(${V.ch},'weak')"><b>Weak spots</b><small>${weak?weak+' prompts to revisit':'Nothing flagged yet'}</small></button>
+  </div>
+
+  <div class="section-h">Review</div>
+  <button class="row-btn" onclick="startSession(${V.ch},'review')"><span class="lead">复</span><span class="body"><b>Mixed chapter review</b><small>About 20 prompts from every section</small></span><span class="meta">→</span></button>`;
+}
+</script>
+<script>
+/* ============================================================
+   SESSION VIEW
+   ============================================================ */
+function renderSession(){
+  if(!SS) return renderHome();
+  if(SS.done) return renderComplete();
+  const p=curPrompt(); const c=SS.cur; const ch=CH[SS.chIdx];
+  const pct=Math.round(SS.idx/SS.ids.length*100);
+  let body='';
+  switch(p.t){
+    case 'intro': body=renderIntro(p); break;
+    case 'mc': case 'fill': case 'tr': body=renderMC(p); break;
+    case 'wo': body=renderWO(p); break;
+    case 'pos': body=renderPos(p); break;
+    case 'speak': body=renderSpeak(p); break;
+    case 'tone': body=renderTone(p); break;
+    case 'listen': body=renderListen(p); break;
+    case 'free': body=renderFree(p); break;
+    default: body=`<div class="err">Unknown prompt type ${esc(p.t)}</div>`;
+  }
+  return `<div class="session-top">
+    <button class="nav-btn" onclick="quitSession()" aria-label="Quit">✕</button>
+    <div class="bar seal"><i style="width:${pct}%"></i></div>
+    <span class="count">${SS.idx+1} / ${SS.ids.length}</span>
+    <button class="nav-btn" onclick="navBack()" ${SS.hist.length?'':'disabled'} aria-label="Previous">◀</button>
+    <button class="nav-btn" onclick="navFwd()" ${SS.fwd.length?'':'disabled'} aria-label="Next">▶</button>
+  </div>
+  <div class="subtle" style="margin-bottom:8px">${esc(ch.title)} · ${esc(SS.label)}</div>
+  <div class="card">${body}</div>`;
+}
+function afterSessionRender(){
+  if(!SS||SS.done) return; const p=curPrompt(); const c=SS.cur;
+  if(p.t==='listen'&&!c.answered&&!c.played){ c.played=true; TTS.speak(Z(p.line)); }
+  if(p.t==='tone'&&!c.answered&&!c.played){ c.played=true; TTS.speak(ZV(p.v)); }
+}
+const nextBtn = (label='Next →') => `<div class="actions"><button class="btn primary wide" onclick="nextPrompt()">${label} <span class="kbd">⏎</span></button></div>`;
+const feedback = (ok, p, extra='') => `<div class="feedback ${ok?'good':'bad'}"><b>${ok?'Correct.':'Not quite.'}</b> ${extra}${p.why?`<span class="why">${esc(p.why)}</span>`:''}</div>`;
+
+/* intro */
+function renderIntro(p){
+  const g=p.g;
+  return `<div class="intro"><div class="type-label">Grammar point</div>
+    <div class="big" onclick="say(${jsq(Z(g).replace(/ · /g,'，'))})">${esc(Z(g))}</div><div class="py-big">${esc(g.py)}</div>
+    <div class="summary">${esc(g.summary)}</div>
+    ${(g.rules||[]).map(r=>`<div class="rule"><span>${esc(r[0])}</span><span class="zh" onclick="say(${jsq(r[1].replace(/[✗✓].*$/,''))})">${esc(r[1])}</span></div>`).join('')}
+    <div class="section-h" style="margin-top:16px">Examples</div>
+    ${g.examples.map(ex=>`<div class="ex" onclick="say(${jsq(Z(ex))})"><span class="zh">${esc(Z(ex))}</span>${SET.pinyin==='show'?`<span class="py">${esc(ex.py)}</span>`:''}<div class="en">${esc(ex.en)}</div></div>`).join('')}
+    ${nextBtn("Got it — let's practise →")}</div>`;
+}
+
+/* multiple choice (mc / fill / tr / comprehension / measure word) */
+function mcAnswerIdx(p){ return typeof p.ans==='number'?p.ans:p.opts.indexOf(p.ans); }
+function renderMC(p){
+  const c=SS.cur; const isZhOpts=p.t==='fill'||/[\u3400-\u9fff]/.test(p.opts[0]);
+  const zh=Z(p); const shown = c.answered ? zh.replace(/___/g,`<span class="blank">${esc(p.opts[mcAnswerIdx(p)])}</span>`) : zh.replace(/___/g,'<span class="blank">&nbsp;</span>');
+  const label=p.label||{fill:'Fill the blank',tr:'Translate',mc:'Choose'}[p.t]||'Choose';
+  return `<div class="type-label">${esc(label)}</div>
+    ${zh?`<div class="prompt-zh" onclick="say(${jsq(zh.replace(/___/g, c.answered?p.opts[mcAnswerIdx(p)]:'…'))})">${p.t==='fill'||/___/.test(zh)?shown:esc(zh)}</div>`:''}
+    ${p.py&&SET.pinyin==='show'&&(c.answered||p.t!=='fill')?`<div class="prompt-py">${esc(p.py)}</div>`:''}
+    ${p.en&&p.t!=='tr'&&(c.answered||p.t==='fill')?`<div class="prompt-en">${esc(p.en)}</div>`:''}
+    ${p.q?`<div class="prompt-q">${esc(p.q)}</div>`:''}
+    <div class="opts">${p.opts.map((o,i)=>{ let cls=''; if(c.answered){ if(i===mcAnswerIdx(p)) cls='right'; else if(i===c.sel) cls='wrong'; } else if(i===c.sel) cls='sel';
+      return `<button class="opt ${cls}" ${c.answered?'disabled':''} onclick="pick(${i})"><span class="key">${i+1}</span><span class="${isZhOpts?'zh':''}">${esc(o)}</span></button>`; }).join('')}</div>
+    ${c.answered ? feedback(c.ok,p) + nextBtn() : `<div class="actions"><button class="btn primary wide" onclick="checkMC()" ${c.sel===null?'disabled':''}>Check <span class="kbd">⏎</span></button></div>`}`;
+}
+function pick(i){ if(SS.cur.answered) return; SS.cur.sel=i; render(); }
+function checkMC(){ const p=curPrompt(); if(SS.cur.sel===null) return; const ok=SS.cur.sel===mcAnswerIdx(p); if(ok&&Z(p)) say(Z(p).replace(/___/g,p.opts[mcAnswerIdx(p)])); scoreCurrent(ok); }
+
+/* word order */
+function renderWO(p){
+  const c=SS.cur; const words=ZW(p); const bank=c.bank||(c.bank=shuffle(words.concat(p.extra||[]).map((w,i)=>({w,i}))));
+  const usedIdx=new Set(c.wo);
+  return `<div class="type-label">Word order</div>
+    <div class="prompt-en" style="font-size:1.05rem">${esc(p.en)}</div>
+    <div class="answer-line ${c.answered?(c.ok?'right':'wrong'):''}">${c.wo.map(i=>`<button class="tile" onclick="woRemove(${i})">${esc(bank.find(b=>b.i===i).w)}</button>`).join('')}</div>
+    <div class="bank">${bank.map(b=>`<button class="tile ${usedIdx.has(b.i)?'used':''}" ${c.answered?'disabled':''} onclick="woAdd(${b.i})">${esc(b.w)}</button>`).join('')}</div>
+    ${c.answered ? feedback(c.ok,p, c.ok?'':`<span class="zh" onclick="say(${jsq(words.join(''))})">${esc(words.join(''))}</span> `) + (SET.pinyin==='show'?`<div class="prompt-py">${esc(p.py||'')}</div>`:'') + nextBtn()
+      : `<div class="actions"><button class="btn primary wide" onclick="checkWO()" ${c.wo.length?'':'disabled'}>Check <span class="kbd">⏎</span></button><button class="btn ghost" onclick="SS.cur.wo=[];render()">Clear</button></div>`}`;
+}
+function woAdd(i){ const c=SS.cur; if(c.answered||c.wo.includes(i)) return; c.wo.push(i); render(); }
+function woRemove(i){ const c=SS.cur; if(c.answered) return; c.wo=c.wo.filter(x=>x!==i); render(); }
+function checkWO(){ const p=curPrompt(); const c=SS.cur; const words=ZW(p); const got=c.wo.map(i=>c.bank.find(b=>b.i===i).w).join(''); const ok=got===words.join(''); if(ok) say(words.join('')); scoreCurrent(ok); }
+
+/* position */
+function renderPos(p){
+  const c=SS.cur; const words=ZW(p);
+  let html=''; for(let i=0;i<=words.length;i++){
+    if(i===words.length&&/^[。？！]$/.test(words[words.length-1])) break;
+    const isSel=c.pos===i; const cls=c.answered?(i===p.ans?'right':(isSel?'wrong':'')):(isSel?'sel':'');
+    if(!(c.answered&&!isSel&&i!==p.ans)) html+=`<button class="gap ${cls}" ${c.answered?'disabled':''} onclick="posPick(${i})">${isSel||(c.answered&&i===p.ans)?esc(p.insert):''}</button>`;
+    else html+=`<span class="gap" style="visibility:hidden"></span>`;
+    if(i<words.length) html+=`<span class="pos-word">${esc(words[i])}</span>`;
+  }
+  return `<div class="type-label">Place the word</div>
+    <div class="prompt-q">Where does <span class="zh" style="font-size:1.4rem;color:var(--seal)">${esc(p.insert)}</span> go?</div>
+    <div class="prompt-en">${esc(p.en)}</div>
+    <div class="pos-line">${html}</div>
+    ${c.answered ? feedback(c.ok,p) + (SET.pinyin==='show'?`<div class="prompt-py">${esc(p.py||'')}</div>`:'') + nextBtn()
+      : `<div class="actions"><button class="btn primary wide" onclick="checkPos()" ${c.pos===null?'disabled':''}>Check <span class="kbd">⏎</span></button></div>`}`;
+}
+function posPick(i){ if(SS.cur.answered) return; SS.cur.pos=i; render(); }
+function checkPos(){ const p=curPrompt(); const ok=SS.cur.pos===p.ans; if(ok){ const w=ZW(p).slice(); w.splice(p.ans,0,p.insert); say(w.join('')); } scoreCurrent(ok); }
+
+/* speak */
+function renderSpeak(p){
+  const c=SS.cur; const zh=Z(p);
+  const target=`<div class="speak-target">${p.who?`<div class="subtle zh">${esc(p.who)}</div>`:''}<div class="prompt-zh" onclick="say(${jsq(zh)})">${esc(zh)}</div>
+    ${SET.pinyin==='show'?`<div class="prompt-py">${esc(p.py)}</div>`:''}<div class="prompt-en">${esc(p.en)}</div>
+    <div class="actions" style="justify-content:center"><button class="btn" onclick="say(${jsq(zh)})">${ICONS.sound} &nbsp;Hear it</button></div></div>`;
+  if(c.answered){
+    return `<div class="type-label">${esc(p.label||'Say it')}</div>${target}
+      ${c.heard!==null?renderCompare(zh,c.heard):''}
+      ${c.audio?`<div class="actions" style="justify-content:center"><button class="btn" onclick="playback(${jsq(c.audio)})">🎧 Play my recording</button></div>`:''}
+      <div class="feedback ${c.ok?'good':'bad'}"><b>${c.ok?'Marked as said correctly.':'Marked for more practice.'}</b></div>${nextBtn()}`;
+  }
+  if(c.listening){
+    return `<div class="type-label">Say it</div>${target}
+      <button class="mic-btn listening" onclick="MIC.stop()">${ICONS.mic} Done speaking</button>
+      <div class="mic-status">${esc(c.status||'Listening…')}</div><div class="interim">${esc(c.interim||c.heardLive||'')}</div>`;
+  }
+  if(c.heard!==null){ // recognition finished, awaiting judgement
+    const r=compareTranscript(zh,c.heard);
+    return `<div class="type-label">Say it</div>${target}
+      ${c.micError?`<div class="err" style="margin-top:10px">${esc(c.micError)}</div>`:renderCompare(zh,c.heard)}
+      ${c.audio?`<div class="actions" style="justify-content:center"><button class="btn" onclick="playback(${jsq(c.audio)})">🎧 Play my recording</button></div>`:''}
+      <div class="actions">
+        <button class="btn jade wide" onclick="scoreCurrent(true)">✓ ${r.pct>=80?'Continue':'I said it right'}</button>
+        <button class="btn wide" onclick="speakRetry()">↺ Try again</button>
+        ${r.pct>=80?'':'<button class="btn ghost" onclick="scoreCurrent(false)">Needs more practice</button>'}
+      </div>`;
+  }
+  return `<div class="type-label">${esc(p.label||'Say it')}</div>${target}
+    <button class="mic-btn" onclick="speakStart()">${ICONS.mic} Tap to speak${SET.record&&MIC.canRecord()?' & record':''}</button>
+    <div class="mic-status">${MIC.supported()?'The app listens for up to 9 seconds, or tap Done.':'Speech recognition is not available in this browser. Use Chrome, Edge or Safari, or self-report.'}</div>
+    <div class="actions" style="justify-content:center"><button class="btn ghost" onclick="SS.cur.heard='';SS.cur.micError=null;render()">Skip mic — self-report instead</button></div>`;
+}
+function speakStart(){
+  const p=curPrompt(); const c=SS.cur; c.listening=true; c.status='Starting microphone…'; c.interim=''; render();
+  MIC.start({
+    onUpdate:s=>{ c.status=s.status; c.interim=s.final+s.interim; const el=$('.interim'), st=$('.mic-status'); if(el) el.textContent=c.interim; if(st) st.textContent=c.status; },
+    onDone:res=>{ c.listening=false; c.heard=res.heard||''; c.audio=res.audio||null; c.micError=res.error||null; if(res.error&&!res.heard) c.heard=''; render(); }
+  });
+}
+function speakRetry(){ MIC.teardown(); const c=SS.cur; c.heard=null; c.audio=null; c.micError=null; c.interim=''; render(); }
+
+/* tone drill */
+const TONE_OPTS = ['1','2','3','4'];
+function renderTone(p){
+  const c=SS.cur; const pattern=p.syls.map(toneOf).join('-');
+  if(!c.opts){ const set=new Set([pattern]); let guard=0; while(set.size<4&&guard++<60){ set.add(p.syls.map(()=>TONE_OPTS[Math.floor(Math.random()*4)]).join('-')); } c.opts=shuffle([...set]); }
+  const ansIdx=c.opts.indexOf(pattern);
+  const showWord = c.answered;
+  return `<div class="type-label">Tone drill</div>
+    <div class="speak-target">
+      <div class="prompt-zh" ${showWord?'':'style="filter:blur(10px);pointer-events:none"'} onclick="say(${jsq(ZV(p.v))})">${esc(ZV(p.v))}</div>
+      <div class="tone-py">${p.syls.map(s=>`<span class="${showWord?'t'+toneOf(s):''}">${showWord?esc(s):esc(stripTone(s))}</span>`).join('')}</div>
+      ${showWord?`<div class="prompt-en">${esc(p.v.en)}</div>`:''}
+      <div class="actions" style="justify-content:center"><button class="btn" onclick="say(${jsq(ZV(p.v))})">${ICONS.sound} &nbsp;Play again</button></div>
+    </div>
+    <div class="prompt-q" style="text-align:center">Which tones did you hear?</div>
+    <div class="opts tone-opts">${c.opts.map((o,i)=>{ let cls=''; if(c.answered){ if(i===ansIdx) cls='right'; else if(i===c.sel) cls='wrong'; } else if(i===c.sel) cls='sel';
+      return `<button class="opt ${cls}" ${c.answered?'disabled':''} onclick="pick(${i})"><span class="key">${i+1}</span>${o.split('-').map(t=>`<span class="t${t}">${t}</span>`).join('<span class="subtle">–</span>')}</button>`; }).join('')}</div>
+    ${c.answered ? feedback(c.ok,{why:`${p.v.py} — tones ${pattern}.`}) + nextBtn() : `<div class="actions"><button class="btn primary wide" onclick="checkTone()" ${c.sel===null?'disabled':''}>Check <span class="kbd">⏎</span></button></div>`}`;
+}
+function checkTone(){ const p=curPrompt(); const c=SS.cur; const pattern=p.syls.map(toneOf).join('-'); scoreCurrent(c.opts[c.sel]===pattern); }
+
+/* listen (role-play: the other character's line) */
+function renderListen(p){
+  const c=SS.cur; const l=p.line;
+  return `<div class="type-label">Listen — ${esc(l.who)} speaks</div>
+    <div class="speak-target"><div class="prompt-zh" onclick="say(${jsq(Z(l))})" ${c.reveal?'':'style="filter:blur(8px)"'}>${esc(Z(l))}</div>
+      ${c.reveal?`${SET.pinyin==='show'?`<div class="prompt-py">${esc(l.py)}</div>`:''}<div class="prompt-en">${esc(l.en)}</div>`:''}
+      <div class="actions" style="justify-content:center"><button class="btn" onclick="say(${jsq(Z(l))})">${ICONS.sound} &nbsp;Play again</button>${c.reveal?'':`<button class="btn ghost" onclick="SS.cur.reveal=true;render()">Show the text</button>`}</div></div>
+    ${nextBtn('Your turn →')}`;
+}
+
+/* free translation */
+function renderFree(p){
+  const c=SS.cur; const toZh=!!p.en; const src=toZh?p.en:Z(p);
+  return `<div class="type-label">Translate ${toZh?'into Chinese':'into English'}</div>
+    <div class="${toZh?'prompt-q':'prompt-zh'}" ${toZh?'':`onclick="say(${jsq(src)})"`}>${esc(src)}</div>
+    ${!toZh&&SET.pinyin==='show'?`<div class="prompt-py">${esc(p.py)}</div>`:''}
+    <textarea class="free ${toZh?'':'en'}" id="free-in" placeholder="${toZh?'输入中文…':'Type your English…'}" oninput="SS.cur.free=this.value" ${c.answered?'disabled':''}>${esc(c.free)}</textarea>
+    ${p.hint&&!c.answered?`<div class="subtle" style="margin-top:6px">Hint: ${esc(p.hint)}</div>`:''}
+    ${c.ai?`<div class="ai-feedback">${esc(c.ai)}</div>`:''}
+    ${c.showAns?`<div class="model-answers"><div class="subtle">Model answers</div>${p.answers.map(a=>`<span class="${toZh?'zh':''}" ${toZh?`onclick="say(${jsq(a)})"`:''}>${esc(a)}</span>`).join('')}</div>`:''}
+    ${c.answered ? nextBtn() : `<div class="actions">
+        <button class="btn primary" onclick="freeCheck()">Compare with model answers</button>
+        ${SET.apiKey?`<button class="btn" onclick="freeAI()">Ask AI to grade</button>`:''}
+      </div>
+      ${c.showAns?`<div class="actions"><button class="btn jade wide" onclick="scoreCurrent(true)">Mine matches</button><button class="btn wide" onclick="scoreCurrent(false)">Mine was off</button></div>`:''}`}`;
+}
+function normZh(s){ return String(s||'').replace(/[。，？！、,.?!'"\s]/g,'').toLowerCase(); }
+function freeCheck(){ const p=curPrompt(); const c=SS.cur; c.showAns=true;
+  const mine=normZh(c.free); const hit=p.answers.some(a=>normZh(a)===mine);
+  if(hit){ toast('Exact match with a model answer.'); scoreCurrent(true); } else render(); }
+async function freeAI(){
+  const p=curPrompt(); const c=SS.cur; if(!c.free.trim()){ toast('Type your translation first.'); return; }
+  c.ai='Asking…'; render();
+  const toZh=!!p.en; const src=toZh?p.en:Z(p);
+  const prompt=`You are grading a beginner Chinese student (Integrated Chinese Level 1, chapter ${CH[SS.chIdx].number}). Source: "${src}". Student's translation: "${c.free}". Reference answers: ${p.answers.join(' / ')}. Reply in under 80 words: say whether it is acceptable, point out any grammar or word-choice error in plain terms, and give one corrected version if needed. Do not use markdown.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':SET.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:SET.model,max_tokens:300,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json(); if(d.error) throw new Error(d.error.message||'API error');
+    c.ai=(d.content||[]).map(x=>x.text||'').join('\n').trim()||'No answer returned.';
+    c.showAns=true; render();
+  }catch(e){ c.ai='AI grading failed: '+e.message+'. Check the API key in settings, or compare with the model answers instead.'; render(); }
+}
+
+/* complete */
+function renderComplete(){
+  const ch=CH[SS.chIdx]; const pct=SS.scored?Math.round(SS.correct/SS.scored*100):100;
+  const glyph=pct>=90?'好':pct>=70?'行':'练';
+  return `<div class="session-top"><button class="nav-btn" onclick="navBack()" aria-label="Previous">◀</button><div style="flex:1"></div></div>
+  <div class="card complete"><div class="zh">${glyph}</div><div class="type-label">${esc(SS.label)} complete</div>
+    <div class="score">${pct}%</div>
+    <div class="stat-row"><span>${SS.correct} of ${SS.scored} scored prompts</span><span>${streak()} day streak</span></div>
+    <div class="actions" style="flex-direction:column">
+      <button class="btn primary" onclick="startSession(${SS.chIdx},${jsq(SS.mode)},${jsq(SS.arg??'')})">Run it again</button>
+      ${SS.mode==='grammar'&&Number(SS.arg)<ch.grammar.length-1?`<button class="btn" onclick="startSession(${SS.chIdx},'grammar',${Number(SS.arg)+1})">Next: ${esc(ch.grammar[Number(SS.arg)+1].title)} →</button>`:''}
+      <button class="btn ghost" onclick="go('chapter',{ch:${SS.chIdx}})">Back to chapter</button>
+    </div></div>`;
+}
+</script>
+<script>
+/* ============================================================
+   DIALOGUE READER
+   ============================================================ */
+let DLG = { py:true, en:true, playing:-1, role:null };
+function renderDialogue(ch, did){
+  const d=ch.dialogues.find(x=>x.id===did);
+  const narr=d.roles.length===1;
+  return topbar(`go('chapter',{ch:${V.ch}})`)+`
+  <div class="page-title"><h2>${esc(d.title)}</h2></div>
+  <p class="subtle">${esc(d.note||'')} Tap any line to hear it.</p>
+  <div class="dlg-tools">
+    <button class="toggle ${DLG.py?'on':''}" onclick="DLG.py=!DLG.py;render()">Pinyin</button>
+    <button class="toggle ${DLG.en?'on':''}" onclick="DLG.en=!DLG.en;render()">English</button>
+    <button class="toggle" onclick="playAll()">▶ Play all</button>
+    <button class="toggle" onclick="TTS.stop();DLG.playing=-1;render()">■ Stop</button>
+  </div>
+  ${d.lines.map((l,i)=>`<div class="line ${DLG.playing===i?'playing':''}" id="line-${i}">
+    <div class="who ${narr?'narr':''} zh">${narr?'':esc(l.who)}</div>
+    <div><div class="zh" onclick="playLine(${i})">${esc(Z(l))}</div>${DLG.py?`<span class="py">${esc(l.py)}</span>`:''}${DLG.en?`<div class="en">${esc(l.en)}</div>`:''}</div>
+  </div>`).join('')}
+  <div class="section-h">Practise this dialogue</div>
+  <div class="grid-2">
+    <button class="tile-btn" onclick="startSession(${V.ch},'shadow','${d.id}')"><b>Shadow every line</b><small>Hear each line, then say it back and compare</small></button>
+    ${narr?'':d.roles.map(r=>`<button class="tile-btn" onclick="startSession(${V.ch},'roleplay','${d.id}|${esc(r)}')"><b>Play <span class="zh">${esc(r)}</span></b><small>The app speaks the others; you speak ${esc(r)}'s lines</small></button>`).join('')}
+    <button class="tile-btn" onclick="startSession(${V.ch},'comp')"><b>Comprehension questions</b><small>Check you followed the story</small></button>
+  </div>`;
+}
+async function playLine(i){ const d=CH[V.ch].dialogues.find(x=>x.id===V.did); DLG.playing=i; render(); await TTS.speak(Z(d.lines[i])); if(DLG.playing===i){ DLG.playing=-1; render(); } }
+async function playAll(){
+  const d=CH[V.ch].dialogues.find(x=>x.id===V.did); DLG.playing=0; const token=Symbol(); DLG.token=token;
+  for(let i=0;i<d.lines.length;i++){ if(DLG.token!==token||V.view!=='dialogue') return; DLG.playing=i; render(); const el=document.getElementById('line-'+i); el&&el.scrollIntoView({block:'center',behavior:'smooth'}); await TTS.speak(Z(d.lines[i])); await new Promise(r=>setTimeout(r,350)); }
+  DLG.playing=-1; render();
+}
+
+/* ============================================================
+   VOCAB REFERENCE
+   ============================================================ */
+function renderVocab(ch){
+  return topbar(`go('chapter',{ch:${V.ch}})`)+`
+  <div class="page-title"><h2>Chapter ${ch.number} vocabulary</h2></div>
+  <p class="subtle">${ch.vocab.length} words. Tap a word to hear it. Tones are coloured: <span class="t1">1</span> <span class="t2">2</span> <span class="t3">3</span> <span class="t4">4</span>.</p>
+  ${ch.vocab.map(v=>{ const syls=syllables(v.py); return `<div class="vrow">
+    <span class="zh" onclick="say(${jsq(ZV(v))})">${esc(ZV(v))}</span>
+    <div><span class="py">${syls.length?syls.map(s=>`<span class="t${toneOf(s)}">${esc(s)}</span>`).join(' '):esc(v.py)}</span><div class="en">${esc(v.en)}</div></div>
+    <button class="icon-btn" onclick="say(${jsq(ZV(v))})" aria-label="Hear">${ICONS.sound}</button></div>`; }).join('')}`;
+}
+
+/* ============================================================
+   CHARACTER WRITING (Hanzi Writer, loaded on demand)
+   ============================================================ */
+let WR = { char:null, writer:null, mode:'animate', lib:null };
+function renderWriting(ch){
+  WR.char = WR.char && ch.writing.includes(WR.char) ? WR.char : ch.writing[0];
+  return topbar(`go('chapter',{ch:${V.ch}})`)+`
+  <div class="page-title"><h2>Write characters</h2></div>
+  <p class="subtle">Watch the stroke order, then trace it. Stroke data loads from the internet the first time each character is shown.</p>
+  <div class="writer-wrap">
+    <div id="writer"><div class="subtle" style="padding:110px 0;text-align:center" id="writer-msg">Loading…</div></div>
+    <div class="actions" style="margin-top:0">
+      <button class="btn ${WR.mode==='animate'?'primary':''}" onclick="WR.mode='animate';initWriter()">Animate strokes</button>
+      <button class="btn ${WR.mode==='quiz'?'primary':''}" onclick="WR.mode='quiz';initWriter()">Trace it</button>
+      <button class="btn" onclick="say(${jsq(WR.char)})">${ICONS.sound}</button>
+    </div>
+    <div class="subtle" id="writer-info">${esc(HP[WR.char]||'')}</div>
+  </div>
+  <div class="char-picker">${ch.writing.map(c=>`<button class="tile ${c===WR.char?'sel':''}" onclick="WR.char=${jsq(c)};render()">${esc(c)}</button>`).join('')}</div>`;
+}
+function loadHanziWriter(){
+  if(window.HanziWriter) return Promise.resolve(window.HanziWriter);
+  if(WR.lib) return WR.lib;
+  WR.lib=new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/hanzi-writer@3.7/dist/hanzi-writer.min.js'; s.onload=()=>res(window.HanziWriter); s.onerror=()=>{ WR.lib=null; rej(new Error('offline')); }; document.head.appendChild(s); });
+  return WR.lib;
+}
+async function initWriter(){
+  const box=document.getElementById('writer'); if(!box) return;
+  const dark=document.documentElement.dataset.theme==='dark';
+  try{
+    const HW=await loadHanziWriter();
+    box.innerHTML='';
+    WR.writer=HW.create(box, WR.char, { width:260, height:260, padding:18, showOutline:true, strokeAnimationSpeed:1, delayBetweenStrokes:250,
+      strokeColor: dark?'#ECF0ED':'#1C2426', outlineColor: dark?'#2C3838':'#D2DBD6', radicalColor:'#B8312F', drawingColor: dark?'#5FB394':'#2F7A63', highlightColor:'#C99A3B', showCharacter: WR.mode==='animate',
+      charDataLoader:(c,onLoad,onErr)=>fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2/${encodeURIComponent(c)}.json`).then(r=>{ if(!r.ok) throw new Error('missing'); return r.json(); }).then(onLoad).catch(onErr) });
+    const info=document.getElementById('writer-info');
+    if(WR.mode==='animate'){ WR.writer.loopCharacterAnimation(); if(info) info.textContent=(HP[WR.char]||'')+' · tap a stroke count to see it drawn'; }
+    else { WR.writer.quiz({ showHintAfterMisses:2, onComplete:(s)=>{ if(info) info.textContent=`Done — ${s.totalMistakes} mistake${s.totalMistakes===1?'':'s'}. Tap “Trace it” to try again.`; record(`writing:${WR.char}`, s.totalMistakes<=2); } }); if(info) info.textContent='Draw each stroke in order. Hints appear after two misses.'; }
+  }catch(e){ box.innerHTML=`<div class="subtle" style="padding:90px 20px;text-align:center">Stroke data could not be loaded. Connect to the internet once and try again.</div>`; }
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function renderSettings(){
+  const sw=(key,label,desc)=>`<div class="set-row"><div class="body"><b>${label}</b><small>${desc}</small></div><button class="switch ${SET[key]?'on':''}" role="switch" aria-checked="${!!SET[key]}" onclick="SET.${key}=!SET.${key};saveSet();render()"></button></div>`;
+  const back = V.from ? `V=${JSON.stringify(V.from)};render()` : "go('home')";
+  const voice=TTS.voice?`${TTS.voice.name} (${TTS.voice.lang})`:'none found';
+  return topbar(back,'Settings')+`
+  <div class="section-h">Display</div>
+  <div class="set-row"><div class="body"><b>Character set</b><small>Simplified is the textbook default</small></div>
+    <select style="width:auto" onchange="SET.script=this.value;saveSet();TTS.voice=TTS.pick(TTS.voices);render()"><option value="s" ${SET.script==='s'?'selected':''}>Simplified 简体</option><option value="t" ${SET.script==='t'?'selected':''}>Traditional 繁體</option></select></div>
+  <div class="set-row"><div class="body"><b>Pinyin</b><small>Show pinyin under sentences during practice</small></div>
+    <select style="width:auto" onchange="SET.pinyin=this.value;saveSet();render()"><option value="show" ${SET.pinyin==='show'?'selected':''}>Show</option><option value="hide" ${SET.pinyin==='hide'?'selected':''}>Hide</option></select></div>
+  <div class="set-row"><div class="body"><b>Theme</b></div>
+    <select style="width:auto" onchange="SET.theme=this.value;saveSet();render()"><option value="auto" ${SET.theme==='auto'?'selected':''}>Match system</option><option value="light" ${SET.theme==='light'?'selected':''}>Light</option><option value="dark" ${SET.theme==='dark'?'selected':''}>Dark</option></select></div>
+
+  <div class="section-h">Audio</div>
+  <div class="set-row"><div class="body"><b>Speech rate</b><small>${SET.rate.toFixed(2)}× · voice: ${esc(voice)}</small></div>
+    <input type="range" min="0.5" max="1.2" step="0.05" value="${SET.rate}" oninput="SET.rate=parseFloat(this.value);saveSet();this.parentNode.querySelector('small').textContent=SET.rate.toFixed(2)+'× · voice: ${esc(voice).replace(/'/g,'’')}'" onchange="say('你好，我很高兴')"></div>
+  ${sw('record','Record my voice','Keeps a playback of each speaking attempt. Turn off if the mic button is slow to start.')}
+  <div class="set-row"><div class="body"><b>Test the voice</b><small>${TTS.available()?'A Chinese voice is available.':'No Chinese voice found. On Windows, add the Chinese language pack; on macOS/iOS, add a Chinese voice under Accessibility › Spoken Content.'}</small></div><button class="btn" onclick="say('你们想喝点儿什么？')">Play</button></div>
+
+  <div class="section-h">AI grading (optional)</div>
+  <div class="set-row"><div class="body"><b>Anthropic API key</b><small>Used only for grading free translations, sent directly from this browser. Stored on this device.</small></div></div>
+  <input type="password" placeholder="sk-ant-…" value="${esc(SET.apiKey)}" onchange="SET.apiKey=this.value.trim();saveSet()">
+  <div style="height:8px"></div>
+  <input type="text" placeholder="model id" value="${esc(SET.model)}" onchange="SET.model=this.value.trim()||'${DEF_SET.model}';saveSet()">
+
+  <div class="section-h">Progress</div>
+  <div class="set-row"><div class="body"><b>Export backup</b><small>Download your progress as JSON</small></div><button class="btn" onclick="exportProg()">Export</button></div>
+  <div class="set-row"><div class="body"><b>Import backup</b><small>Merges results from a file</small></div><label class="btn">Import<input type="file" accept="application/json" style="display:none" onchange="importProg(this.files[0])"></label></div>
+  <div class="set-row"><div class="body"><b>Reset all progress</b><small>Cannot be undone</small></div><button class="btn seal" onclick="if(confirm('Delete all progress?')){PROG={results:{},days:{},sessions:0};saveProg();localStorage.removeItem('ic_resume');toast('Progress cleared');render()}">Reset</button></div>
+
+  <div class="section-h">About</div>
+  <p class="subtle">Content files: ${CH.map(c=>`chapter${c.number}.js`).join(', ')}. Keyboard: <span class="kbd">1–4</span> choose, <span class="kbd">⏎</span> check / next, <span class="kbd">Space</span> hear it, <span class="kbd">M</span> mic.</p>`;
+}
+function exportProg(){ const a=document.createElement('a'); a.href='data:application/json,'+encodeURIComponent(JSON.stringify(PROG)); a.download=`ic-progress-${todayKey()}.json`; a.click(); }
+function importProg(file){ if(!file) return; file.text().then(t=>{ const d=safeJSON(t); if(!d||!d.results){ toast('That file is not a progress backup.'); return; }
+  Object.entries(d.results).forEach(([k,v])=>{ const cur=PROG.results[k]; if(!cur||(v.at||0)>(cur.at||0)) PROG.results[k]=v; });
+  Object.entries(d.days||{}).forEach(([k,v])=>{ PROG.days[k]=Math.max(PROG.days[k]||0,v); });
+  PROG.sessions=Math.max(PROG.sessions||0,d.sessions||0); saveProg(); toast('Progress imported.'); render(); }); }
+
+/* ============================================================
+   KEYBOARD
+   ============================================================ */
+document.addEventListener('keydown', e=>{
+  if(V.view!=='session'||!SS||SS.done) return;
+  const tag=(e.target.tagName||'').toLowerCase(); if(tag==='textarea'||tag==='input') return;
+  const p=curPrompt(); const c=SS.cur;
+  if(e.key>='1'&&e.key<='9'&&(p.opts||c.opts)){ const n=+e.key-1; const len=(p.opts||c.opts).length; if(n<len){ pick(n); e.preventDefault(); } return; }
+  if(e.key==='Enter'){ e.preventDefault();
+    if(c.answered||p.t==='intro'||p.t==='listen') return nextPrompt();
+    if(p.t==='tone') return checkTone(); if(p.t==='wo') return checkWO(); if(p.t==='pos') return checkPos();
+    if(p.opts) return checkMC();
+    if(p.t==='speak'&&c.heard!==null&&!c.listening) return scoreCurrent(true);
+  }
+  if(e.key===' '&&(p.zh||p.line||p.v)){ e.preventDefault(); say(p.line?Z(p.line):p.v?ZV(p.v):Z(p)); }
+  if((e.key==='m'||e.key==='M')&&p.t==='speak'&&!c.answered){ e.preventDefault(); c.listening?MIC.stop():speakStart(); }
+});
+
+/* ============================================================
+   PWA (manifest generated inline so the app stays a plain folder)
+   ============================================================ */
+(function pwa(){
+  const icon=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#B8312F"/><text x="50" y="68" font-size="56" text-anchor="middle" font-family="Noto Serif SC,SimSun,serif" fill="#fff">学</text></svg>`;
+  const iconUrl='data:image/svg+xml,'+encodeURIComponent(icon);
+  const m={name:'Integrated Chinese Study',short_name:'中文',start_url:'.',display:'standalone',background_color:'#F4F6F3',theme_color:'#B8312F',icons:[{src:iconUrl,sizes:'any',type:'image/svg+xml'}]};
+  try{ $('#manifest-link').href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(m)); }catch(e){}
+  const l=document.createElement('link'); l.rel='apple-touch-icon'; l.href=iconUrl; document.head.appendChild(l);
+})();
+
+/* ---------- boot ---------- */
+applyTheme();
+if(!CH.length){ app.innerHTML='<div class="err"><b>No chapters loaded.</b> Make sure chapter5.js and chapter6.js sit next to index.html.</div>'; }
+else render();
+</script>
+</body>
+</html>
