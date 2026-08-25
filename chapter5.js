@@ -11,6 +11,7 @@
      wo     word order  {words, extra?, en, py}
      pos    insert a word into a sentence {words, insert, ans, en}
      speak  say the sentence  {zh, py, en}
+     multi  two blanks, separate option rows {zh, blanks:[[..],[..]], ans:[a,b]}
    ============================================================ */
 window.IC_CHAPTERS = window.IC_CHAPTERS || [];
 window.IC_CHAPTERS.push({
@@ -92,7 +93,7 @@ window.IC_CHAPTERS.push({
       ],
       exercises:[
         { t:'fill', zh:'我今天___高兴。', zt:'我今天___高興。', opts:['很','是','在','有'], ans:'很', py:'Wǒ jīntiān hěn gāoxìng.', en:'I am happy today.', why:'Adjective predicates link with 很, never with 是.' },
-        { t:'fill', zh:'你们家___大，也___漂亮。', zt:'你們家___大，也___漂亮。', opts:['很 / 很','是 / 是','很 / 是','不 / 很'], ans:'很 / 很', py:'Nǐmen jiā hěn dà, yě hěn piàoliang.', en:'Your home is big and pretty.', why:'Each adjective gets its own 很; 也 sits before the second one.' },
+        { t:'multi', zh:'我今天___忙，___高兴。', zt:'我今天___忙，___高興。', blanks:[['不','没','是'],['很','是','也']], ans:['不','很'], py:'Wǒ jīntiān bù máng, hěn gāoxìng.', en:'I am not busy today; I am happy.', why:'不 negates the first adjective; 很 links the second.' },
         { t:'fill', zh:'我今天___忙。', opts:['不','没','是不','不是'], ans:'不', py:'Wǒ jīntiān bù máng.', en:'I am not busy today.', why:'To negate an adjective predicate, replace 很 with 不.' },
         { t:'mc', label:'Spot the error', zh:'我是高兴。', zt:'我是高興。', q:'What is wrong with this sentence?', opts:['是 should not be used before an adjective', 'It needs 了 at the end', '高兴 should come first', 'Nothing — it is correct'], ans:0, why:'Adjectives are predicates on their own: 我很高兴。' },
         { t:'mc', label:'Spot the error', zh:'这个学校是很漂亮。', zt:'這個學校是很漂亮。', q:'What is wrong with this sentence?', opts:['Remove 是', 'Remove 很', 'Swap 是 and 很', 'Nothing — it is correct'], ans:0, why:'Remove 是. 这个学校很漂亮。 is the natural sentence.' },
@@ -185,6 +186,8 @@ window.IC_CHAPTERS.push({
         { t:'fill', zh:'你想喝___水吗？', zt:'你想喝___水嗎？', opts:['一点儿','一下','一起','很'], ans:'一点儿', py:'Nǐ xiǎng hē yì diǎnr shuǐ ma?', en:'Would you like a little water?', why:'水 is a noun, so 一点儿 goes before it.' },
         { t:'fill', zh:'我们聊___天儿吧。', zt:'我們聊___天兒吧。', opts:['一下','一点儿'], ans:'一下', py:'Wǒmen liáo yí xià tiānr ba.', en:"Let's chat a bit.", why:'一下 goes inside the verb-object 聊天儿, after the verb.' },
         { t:'fill', zh:'你们想喝___什么？', zt:'你們想喝___什麼？', opts:['点儿','一下','一起','杯'], ans:'点儿', py:'Nǐmen xiǎng hē diǎnr shénme?', en:'What would you like to drink?', why:'点儿 (short for 一点儿) precedes the object 什么.' },
+        { t:'multi', zh:'我介绍___，这___我姐姐。', zt:'我介紹___，這___我姐姐。', blanks:[['一下','一点儿','一起'],['是','很','在']], ans:['一下','是'], py:'Wǒ jièshào yí xià, zhè shì wǒ jiějie.', en:'Let me introduce — this is my older sister.', why:'一下 follows the verb 介绍; 是 links two nouns.' },
+        { t:'multi', zh:'你想喝___水___？', zt:'你想喝___水___？', blanks:[['一点儿','一下','一起'],['吗','吧','呢']], ans:['一点儿','吗'], py:'Nǐ xiǎng hē yì diǎnr shuǐ ma?', en:'Would you like a little water?', why:'一点儿 precedes the noun 水; 吗 asks the yes/no question.' },
         { t:'mc', label:'Spot the error', zh:'我一下介绍。', zt:'我一下介紹。', q:'What is wrong?', opts:['一下 must follow the verb: 我介绍一下','It should be 一点儿','It needs 很','Nothing — it is correct'], ans:0 },
         { t:'wo', words:['你','想','喝','一点儿','水','吗','？'], en:'Would you like a little water?', py:'Nǐ xiǎng hē yì diǎnr shuǐ ma?' },
         { t:'wo', words:['来','，','我','介绍','一下','。'], en:'Come, let me introduce.', py:'Lái, wǒ jièshào yí xià.' },
@@ -217,6 +220,7 @@ window.IC_CHAPTERS.push({
         { t:'pos', words:['他','昨天','晚上','十二点','回家','。'], wt:['他','昨天','晚上','十二點','回家','。'], insert:'才', ans:4, en:"He didn't get home until 12 last night.", py:'Tā zuótiān wǎnshang shí\'èr diǎn cái huí jiā.', why:'才 sits between the time and the verb.' },
         { t:'wo', words:['王朋','喝','了','两杯','茶','。'], en:'Wang Peng drank two cups of tea.', py:'Wáng Péng hē le liǎng bēi chá.' },
         { t:'wo', words:['我','昨天','晚上','十一点','才','回家','。'], extra:['了'], en:"I didn't get home until 11 last night.", py:'Wǒ zuótiān wǎnshang shíyī diǎn cái huí jiā.' },
+        { t:'multi', zh:'我昨天喝___三杯水，十一点___回家。', zt:'我昨天喝___三杯水，十一點___回家。', blanks:[['了','才','吧'],['才','了','在']], ans:['了','才'], py:'Wǒ zuótiān hē le sān bēi shuǐ, shíyī diǎn cái huí jiā.', en:'I drank three glasses of water yesterday and did not get home until eleven.', why:'了 after the verb marks completion; 才 before the verb marks lateness.' },
         { t:'mc', label:'Spot the error', zh:'我了喝三杯水。', q:'What is wrong?', opts:['了 must follow the verb: 喝了','了 should be 才','三杯 should come first','Nothing — it is correct'], ans:0 },
         { t:'tr', zh:'我今天喝了两瓶可乐，很高兴。', zt:'我今天喝了兩瓶可樂，很高興。', py:'Wǒ jīntiān hē le liǎng píng kělè, hěn gāoxìng.', opts:['I drank two bottles of cola today and I am happy.','I want two bottles of cola today, please.','I will drink two bottles of cola; that makes me happy.','I drank two cups of tea today and I am happy.'], ans:0 },
         { t:'speak', zh:'我昨天喝了三杯水。', py:'Wǒ zuótiān hē le sān bēi shuǐ.', en:'I drank three glasses of water yesterday.' },

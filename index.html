@@ -108,6 +108,8 @@ header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
 .session-top .count{font-family:var(--mono);font-size:.78rem;color:var(--ink-faint);min-width:52px;text-align:right}
 .nav-btn{width:34px;height:34px;border-radius:9px;background:var(--paper-2);color:var(--ink-2)}
 .nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn svg{width:18px;height:18px}
+.nav-btn.on{background:var(--ink);color:var(--paper)}
 .card{background:var(--paper-2);border-radius:var(--radius);padding:22px 20px;box-shadow:var(--shadow);animation:pop .22s ease-out}
 @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .type-label{font-family:var(--serif);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--seal);margin-bottom:10px}
@@ -158,6 +160,11 @@ header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
 .tile{font-family:var(--zh);font-size:1.3rem;padding:6px 12px;border-radius:9px;background:var(--paper);border:1.5px solid var(--line);transition:transform .1s}
 .tile:hover{transform:translateY(-1px)}
 .tile.used{opacity:.25;pointer-events:none}
+.tile.sel{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tile.right{background:var(--jade-2);color:var(--jade);border-color:var(--jade)}
+.tile.wrong{background:var(--seal-2);color:var(--seal);border-color:var(--seal)}
+.blank.right{color:var(--jade);border-color:var(--jade)}
+.blank.wrong{border-color:var(--seal)}
 .answer-line .tile{background:var(--paper-3);border-color:transparent}
 .answer-line.right .tile{background:var(--jade-2);color:var(--jade)}
 .answer-line.wrong .tile{background:var(--seal-2);color:var(--seal)}
@@ -174,7 +181,8 @@ header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
 /* speak */
 .speak-target{text-align:center;padding:10px 0 4px}
 .speak-target .prompt-zh{font-size:2.1rem}
-.mic-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:14px;background:var(--seal);color:#fff;font-weight:600;font-size:1.02rem;margin-top:14px}
+.mic-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:11px;background:var(--seal);color:#fff;font-weight:600}
+.mic-btn svg{width:18px;height:18px}
 .mic-btn.listening{background:var(--ink);animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,49,47,.35)}50%{box-shadow:0 0 0 12px rgba(184,49,47,0)}}
 .mic-status{text-align:center;color:var(--ink-2);font-size:.85rem;margin-top:8px;min-height:1.2em}
@@ -268,7 +276,7 @@ const CH = (window.IC_CHAPTERS||[]).slice().sort((a,b)=>a.number-b.number);
 const $ = sel => document.querySelector(sel);
 const app = $('#app');
 const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const jsq = s => JSON.stringify(String(s??''));   // safe for inline handlers
+const jsq = s => "'"+String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;')+"'";   // safe inside onclick="..."
 const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 const todayKey = () => new Date().toISOString().slice(0,10);
 
@@ -285,7 +293,7 @@ function applyTheme(){
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 
 /* script helpers: pick simplified/traditional */
-const Z = (o, sKey='zh', tKey='zt') => (SET.script==='t' && o && o[tKey]) ? o[tKey] : (o ? o[sKey] : '');
+const Z = (o, sKey='zh', tKey='zt') => ((SET.script==='t' && o && o[tKey]) ? o[tKey] : (o ? o[sKey] : '')) || '';
 const ZV = v => SET.script==='t' ? v.t : v.s;
 const ZW = (p) => (SET.script==='t' && p.wt) ? p.wt : p.words;
 
@@ -462,7 +470,9 @@ const MIC = {
   SR: window.SpeechRecognition||window.webkitSpeechRecognition||null,
   rec:null, recorder:null, stream:null, chunks:[], url:null, active:false, final:'', interim:'', timer:null, onUpdate:null, onDone:null,
   supported(){ return !!this.SR; },
-  canRecord(){ return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder); },
+  isAndroid:/Android/i.test(navigator.userAgent),
+  // On Android Chrome, holding the mic with MediaRecorder starves SpeechRecognition (it hears nothing), so recording is skipped there.
+  canRecord(){ return !this.isAndroid && !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder); },
   async start(opts){
     if(this.active) return;
     this.teardown(false);
@@ -558,7 +568,15 @@ const MODE_LABELS={grammar:'Grammar',review:'Chapter review',weak:'Weak spots',t
    ============================================================ */
 let V = { view:'home', ch:0 };
 let SS = null;   // session state
-function go(view, extra={}){ MIC.teardown(); TTS.stop(); V=Object.assign({view},extra); window.scrollTo(0,0); render(); }
+const NAV=[];
+function go(view, extra={}, replace=false){ MIC.teardown(); TTS.stop(); if(V.view==='session'&&SS&&!SS.done) saveResume();
+  if(!replace){ NAV.push(V); try{ history.pushState({n:NAV.length},''); }catch(e){} }
+  V=Object.assign({view},extra); window.scrollTo(0,0); render(); }
+function goBack(){ if(V.view==='session'&&SS&&!SS.done) saveResume(); MIC.teardown(); TTS.stop();
+  if(NAV.length){ V=NAV.pop(); } else { V={view:'home'}; } window.scrollTo(0,0); render(); }
+function back(){ if(NAV.length){ history.back(); } else goBack(); }
+window.addEventListener('popstate', ()=>{ goBack(); });
+try{ history.replaceState({n:0},''); }catch(e){}
 function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
 
 function startSession(chIdx, mode, arg){
@@ -590,7 +608,7 @@ function nextPrompt(){
 }
 function navBack(){ if(!SS.hist.length) return; MIC.teardown(); TTS.stop(); SS.fwd.push(JSON.stringify({idx:SS.idx,cur:Object.assign({},SS.cur,{audio:null})})); const s=JSON.parse(SS.hist.pop()); SS.idx=s.idx; SS.cur=Object.assign(freshCur(),s.cur); SS.done=false; render(); }
 function navFwd(){ if(!SS.fwd.length) return; MIC.teardown(); TTS.stop(); SS.hist.push(JSON.stringify({idx:SS.idx,cur:Object.assign({},SS.cur,{audio:null})})); const s=JSON.parse(SS.fwd.pop()); SS.idx=s.idx; SS.cur=Object.assign(freshCur(),s.cur); render(); }
-function quitSession(){ if(confirm('Leave this session? Your place is saved so you can resume.')){ saveResume(); go('chapter',{ch:SS.chIdx}); } }
+function quitSession(){ saveResume(); back(); }
 
 /* ============================================================
    RENDER
@@ -612,12 +630,13 @@ function render(){
     if(V.view==='session') afterSessionRender();
   }catch(e){ console.error(e); app.innerHTML=`<div class="err"><b>Something went wrong.</b><br>${esc(e.message)}<br><button class="btn" style="margin-top:10px" onclick="localStorage.removeItem('ic_resume');go('home')">Back to start</button></div>`; }
 }
-const ICONS={ back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>', gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>', sound:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18.5 5.5a9 9 0 010 13"/></svg>', mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0M12 17v4"/></svg>' };
-function topbar(back, title){
+const ICONS={ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v10a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/></svg>', back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>', gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>', sound:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18.5 5.5a9 9 0 010 13"/></svg>', mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0M12 17v4"/></svg>' };
+function topbar(showBack, title){
   return `<header class="top">
-    ${back?`<button class="icon-btn" onclick="${back}" aria-label="Back">${ICONS.back}</button>`:''}
+    ${showBack?`<button class="icon-btn" onclick="back()" aria-label="Back">${ICONS.back}</button>`:''}
+    ${showBack&&V.view!=='chapter'?`<button class="icon-btn" onclick="go('home')" aria-label="Home">${ICONS.home}</button>`:''}
     <div class="brand">${title||'<span class="zh">中文</span> Integrated Chinese'}</div>
-    <button class="icon-btn" onclick="go('settings',{from:V})" aria-label="Settings">${ICONS.gear}</button>
+    ${V.view!=='settings'?`<button class="icon-btn" onclick="go('settings')" aria-label="Settings">${ICONS.gear}</button>`:''}
   </header>`;
 }
 
@@ -648,7 +667,7 @@ function renderHome(){
 function renderChapter(ch){
   const dots=ids=>`<div class="dots">${ids.slice(0,8).map(id=>{const r=PROG.results[id]; return `<i class="dot ${!r?'':r.run>=2?'ok':r.last?'part':'bad'}"></i>`;}).join('')}</div>`;
   const weak=weakIds().filter(id=>PROMPTS[id]&&PROMPTS[id].ch===ch.id).length;
-  return topbar("go('home')")+`
+  return topbar(true)+`
   <div class="page-title"><span class="zh">${esc(Z(ch))}</span><h2>Chapter ${ch.number}: ${esc(ch.title)}</h2></div>
   <p class="subtle">${esc(ch.blurb||'')}</p>
   ${ch.draft?`<div class="draft-note">This chapter was drafted from the textbook outline. Check the vocabulary and dialogue against your book and edit <code>chapter${ch.number}.js</code> where it differs.</div>`:''}
@@ -688,6 +707,7 @@ function renderSession(){
   switch(p.t){
     case 'intro': body=renderIntro(p); break;
     case 'mc': case 'fill': case 'tr': body=renderMC(p); break;
+    case 'multi': body=renderMulti(p); break;
     case 'wo': body=renderWO(p); break;
     case 'pos': body=renderPos(p); break;
     case 'speak': body=renderSpeak(p); break;
@@ -697,8 +717,10 @@ function renderSession(){
     default: body=`<div class="err">Unknown prompt type ${esc(p.t)}</div>`;
   }
   return `<div class="session-top">
-    <button class="nav-btn" onclick="quitSession()" aria-label="Quit">✕</button>
+    <button class="nav-btn" onclick="quitSession()" aria-label="Back">${ICONS.back}</button>
+    <button class="nav-btn" onclick="go('home')" aria-label="Home">${ICONS.home}</button>
     <div class="bar seal"><i style="width:${pct}%"></i></div>
+    <button class="nav-btn zh ${SET.pinyin==='show'?'on':''}" onclick="togglePinyin()" title="Show or hide pinyin" aria-label="Pinyin">拼</button>
     <span class="count">${SS.idx+1} / ${SS.ids.length}</span>
     <button class="nav-btn" onclick="navBack()" ${SS.hist.length?'':'disabled'} aria-label="Previous">◀</button>
     <button class="nav-btn" onclick="navFwd()" ${SS.fwd.length?'':'disabled'} aria-label="Next">▶</button>
@@ -706,6 +728,7 @@ function renderSession(){
   <div class="subtle" style="margin-bottom:8px">${esc(ch.title)} · ${esc(SS.label)}</div>
   <div class="card">${body}</div>`;
 }
+function togglePinyin(){ SET.pinyin=SET.pinyin==='show'?'hide':'show'; saveSet(); render(); }
 function afterSessionRender(){
   if(!SS||SS.done) return; const p=curPrompt(); const c=SS.cur;
   if(p.t==='listen'&&!c.answered&&!c.played){ c.played=true; TTS.speak(Z(p.line)); }
@@ -730,7 +753,8 @@ function renderIntro(p){
 function mcAnswerIdx(p){ return typeof p.ans==='number'?p.ans:p.opts.indexOf(p.ans); }
 function renderMC(p){
   const c=SS.cur; const isZhOpts=p.t==='fill'||/[\u3400-\u9fff]/.test(p.opts[0]);
-  const zh=Z(p); const shown = c.answered ? zh.replace(/___/g,`<span class="blank">${esc(p.opts[mcAnswerIdx(p)])}</span>`) : zh.replace(/___/g,'<span class="blank">&nbsp;</span>');
+  const zh=Z(p); const fillWord = c.answered ? p.opts[mcAnswerIdx(p)] : (c.sel!==null ? p.opts[c.sel] : null);
+  const shown = zh.replace(/___/g, fillWord!==null ? `<span class="blank">${esc(fillWord)}</span>` : '<span class="blank">&nbsp;</span>');
   const label=p.label||{fill:'Fill the blank',tr:'Translate',mc:'Choose'}[p.t]||'Choose';
   return `<div class="type-label">${esc(label)}</div>
     ${zh?`<div class="prompt-zh" onclick="say(${jsq(zh.replace(/___/g, c.answered?p.opts[mcAnswerIdx(p)]:'…'))})">${p.t==='fill'||/___/.test(zh)?shown:esc(zh)}</div>`:''}
@@ -743,6 +767,23 @@ function renderMC(p){
 }
 function pick(i){ if(SS.cur.answered) return; SS.cur.sel=i; render(); }
 function checkMC(){ const p=curPrompt(); if(SS.cur.sel===null) return; const ok=SS.cur.sel===mcAnswerIdx(p); if(ok&&Z(p)) say(Z(p).replace(/___/g,p.opts[mcAnswerIdx(p)])); scoreCurrent(ok); }
+
+/* multi-blank: one option row per blank */
+function renderMulti(p){
+  const c=SS.cur; if(!c.multi) c.multi=p.blanks.map(()=>null);
+  let k=0; const zh=Z(p);
+  const shown=zh.replace(/___/g,()=>{ const i=k++; const w=c.answered?p.ans[i]:c.multi[i]; const cls=c.answered?(c.multi[i]===p.ans[i]?'right':'wrong'):(c.active===i?'active':'');
+    return `<span class="blank ${cls}" onclick="SS.cur.active=${i};render()">${w?esc(w):'&nbsp;'}</span>`; });
+  return `<div class="type-label">${esc(p.label||'Fill both blanks')}</div>
+    <div class="prompt-zh">${shown}</div>
+    ${c.answered&&p.py&&SET.pinyin==='show'?`<div class="prompt-py">${esc(p.py)}</div>`:''}
+    <div class="prompt-en">${esc(p.en||'')}</div>
+    ${p.blanks.map((opts,i)=>`<div class="subtle" style="margin-top:12px">Blank ${i+1}</div><div class="bank">${opts.map(o=>{ let cls=''; if(c.answered){ if(o===p.ans[i]) cls='right'; else if(o===c.multi[i]) cls='wrong'; } else if(o===c.multi[i]) cls='sel';
+      return `<button class="tile ${cls}" ${c.answered?'disabled':''} onclick="multiPick(${i},${jsq(o)})">${esc(o)}</button>`; }).join('')}</div>`).join('')}
+    ${c.answered ? feedback(c.ok,p) + nextBtn() : `<div class="actions"><button class="btn primary wide" onclick="checkMulti()" ${c.multi.every(x=>x!==null)?'':'disabled'}>Check <span class="kbd">⏎</span></button></div>`}`;
+}
+function multiPick(i,o){ if(SS.cur.answered) return; SS.cur.multi[i]=o; SS.cur.active=null; render(); }
+function checkMulti(){ const p=curPrompt(); const c=SS.cur; if(c.multi.some(x=>x===null)) return; const ok=c.multi.every((x,i)=>x===p.ans[i]); if(ok){ let k=0; say(Z(p).replace(/___/g,()=>p.ans[k++])); } scoreCurrent(ok); }
 
 /* word order */
 function renderWO(p){
@@ -793,7 +834,7 @@ function renderSpeak(p){
   }
   if(c.listening){
     return `<div class="type-label">Say it</div>${target}
-      <button class="mic-btn listening" onclick="MIC.stop()">${ICONS.mic} Done speaking</button>
+      <div class="actions" style="justify-content:center"><button class="mic-btn listening" onclick="MIC.stop()">${ICONS.mic} Done speaking</button></div>
       <div class="mic-status">${esc(c.status||'Listening…')}</div><div class="interim">${esc(c.interim||c.heardLive||'')}</div>`;
   }
   if(c.heard!==null){ // recognition finished, awaiting judgement
@@ -808,8 +849,8 @@ function renderSpeak(p){
       </div>`;
   }
   return `<div class="type-label">${esc(p.label||'Say it')}</div>${target}
-    <button class="mic-btn" onclick="speakStart()">${ICONS.mic} Tap to speak${SET.record&&MIC.canRecord()?' & record':''}</button>
-    <div class="mic-status">${MIC.supported()?'The app listens for up to 9 seconds, or tap Done.':'Speech recognition is not available in this browser. Use Chrome, Edge or Safari, or self-report.'}</div>
+    <div class="actions" style="justify-content:center"><button class="mic-btn" onclick="speakStart()">${ICONS.mic} Tap to speak</button></div>
+    <div class="mic-status">${MIC.supported()?(MIC.isAndroid?'Listens for up to 9 seconds. Playback of your voice is not available on Android Chrome.':'The app listens for up to 9 seconds, or tap Done.'):'Speech recognition is not available in this browser. Use Chrome, Edge or Safari, or self-report.'}</div>
     <div class="actions" style="justify-content:center"><button class="btn ghost" onclick="SS.cur.heard='';SS.cur.micError=null;render()">Skip mic — self-report instead</button></div>`;
 }
 function speakStart(){
@@ -889,14 +930,14 @@ async function freeAI(){
 function renderComplete(){
   const ch=CH[SS.chIdx]; const pct=SS.scored?Math.round(SS.correct/SS.scored*100):100;
   const glyph=pct>=90?'好':pct>=70?'行':'练';
-  return `<div class="session-top"><button class="nav-btn" onclick="navBack()" aria-label="Previous">◀</button><div style="flex:1"></div></div>
+  return `<div class="session-top"><button class="nav-btn" onclick="back()" aria-label="Back">${ICONS.back}</button><button class="nav-btn" onclick="go('home')" aria-label="Home">${ICONS.home}</button><div style="flex:1"></div><button class="nav-btn" onclick="navBack()" aria-label="Previous">◀</button></div>
   <div class="card complete"><div class="zh">${glyph}</div><div class="type-label">${esc(SS.label)} complete</div>
     <div class="score">${pct}%</div>
     <div class="stat-row"><span>${SS.correct} of ${SS.scored} scored prompts</span><span>${streak()} day streak</span></div>
     <div class="actions" style="flex-direction:column">
       <button class="btn primary" onclick="startSession(${SS.chIdx},${jsq(SS.mode)},${jsq(SS.arg??'')})">Run it again</button>
       ${SS.mode==='grammar'&&Number(SS.arg)<ch.grammar.length-1?`<button class="btn" onclick="startSession(${SS.chIdx},'grammar',${Number(SS.arg)+1})">Next: ${esc(ch.grammar[Number(SS.arg)+1].title)} →</button>`:''}
-      <button class="btn ghost" onclick="go('chapter',{ch:${SS.chIdx}})">Back to chapter</button>
+      <button class="btn ghost" onclick="back()">Back to chapter</button>
     </div></div>`;
 }
 </script>
@@ -904,22 +945,22 @@ function renderComplete(){
 /* ============================================================
    DIALOGUE READER
    ============================================================ */
-let DLG = { py:true, en:true, playing:-1, role:null };
+let DLG = { en:true, playing:-1, role:null };
 function renderDialogue(ch, did){
   const d=ch.dialogues.find(x=>x.id===did);
   const narr=d.roles.length===1;
-  return topbar(`go('chapter',{ch:${V.ch}})`)+`
+  return topbar(true)+`
   <div class="page-title"><h2>${esc(d.title)}</h2></div>
   <p class="subtle">${esc(d.note||'')} Tap any line to hear it.</p>
   <div class="dlg-tools">
-    <button class="toggle ${DLG.py?'on':''}" onclick="DLG.py=!DLG.py;render()">Pinyin</button>
+    <button class="toggle ${SET.pinyin==='show'?'on':''}" onclick="togglePinyin()">Pinyin</button>
     <button class="toggle ${DLG.en?'on':''}" onclick="DLG.en=!DLG.en;render()">English</button>
     <button class="toggle" onclick="playAll()">▶ Play all</button>
     <button class="toggle" onclick="TTS.stop();DLG.playing=-1;render()">■ Stop</button>
   </div>
   ${d.lines.map((l,i)=>`<div class="line ${DLG.playing===i?'playing':''}" id="line-${i}">
     <div class="who ${narr?'narr':''} zh">${narr?'':esc(l.who)}</div>
-    <div><div class="zh" onclick="playLine(${i})">${esc(Z(l))}</div>${DLG.py?`<span class="py">${esc(l.py)}</span>`:''}${DLG.en?`<div class="en">${esc(l.en)}</div>`:''}</div>
+    <div><div class="zh" onclick="playLine(${i})">${esc(Z(l))}</div>${SET.pinyin==='show'?`<span class="py">${esc(l.py)}</span>`:''}${DLG.en?`<div class="en">${esc(l.en)}</div>`:''}</div>
   </div>`).join('')}
   <div class="section-h">Practise this dialogue</div>
   <div class="grid-2">
@@ -939,12 +980,13 @@ async function playAll(){
    VOCAB REFERENCE
    ============================================================ */
 function renderVocab(ch){
-  return topbar(`go('chapter',{ch:${V.ch}})`)+`
+  return topbar(true)+`
   <div class="page-title"><h2>Chapter ${ch.number} vocabulary</h2></div>
   <p class="subtle">${ch.vocab.length} words. Tap a word to hear it. Tones are coloured: <span class="t1">1</span> <span class="t2">2</span> <span class="t3">3</span> <span class="t4">4</span>.</p>
+  <div class="dlg-tools"><button class="toggle ${SET.pinyin==='show'?'on':''}" onclick="togglePinyin()">Pinyin</button></div>
   ${ch.vocab.map(v=>{ const syls=syllables(v.py); return `<div class="vrow">
     <span class="zh" onclick="say(${jsq(ZV(v))})">${esc(ZV(v))}</span>
-    <div><span class="py">${syls.length?syls.map(s=>`<span class="t${toneOf(s)}">${esc(s)}</span>`).join(' '):esc(v.py)}</span><div class="en">${esc(v.en)}</div></div>
+    <div>${SET.pinyin==='show'?`<span class="py">${syls.length?syls.map(s=>`<span class="t${toneOf(s)}">${esc(s)}</span>`).join(' '):esc(v.py)}</span>`:''}<div class="en">${esc(v.en)}</div></div>
     <button class="icon-btn" onclick="say(${jsq(ZV(v))})" aria-label="Hear">${ICONS.sound}</button></div>`; }).join('')}`;
 }
 
@@ -954,17 +996,18 @@ function renderVocab(ch){
 let WR = { char:null, writer:null, mode:'animate', lib:null };
 function renderWriting(ch){
   WR.char = WR.char && ch.writing.includes(WR.char) ? WR.char : ch.writing[0];
-  return topbar(`go('chapter',{ch:${V.ch}})`)+`
+  return topbar(true)+`
   <div class="page-title"><h2>Write characters</h2></div>
   <p class="subtle">Watch the stroke order, then trace it. Stroke data loads from the internet the first time each character is shown.</p>
   <div class="writer-wrap">
     <div id="writer"><div class="subtle" style="padding:110px 0;text-align:center" id="writer-msg">Loading…</div></div>
-    <div class="actions" style="margin-top:0">
-      <button class="btn ${WR.mode==='animate'?'primary':''}" onclick="WR.mode='animate';initWriter()">Animate strokes</button>
-      <button class="btn ${WR.mode==='quiz'?'primary':''}" onclick="WR.mode='quiz';initWriter()">Trace it</button>
-      <button class="btn" onclick="say(${jsq(WR.char)})">${ICONS.sound}</button>
+    <div class="actions" style="margin-top:0;justify-content:center">
+      <button class="btn ${WR.mode==='animate'?'primary':''}" onclick="WR.mode='animate';render()">Watch</button>
+      <button class="btn ${WR.mode==='quiz'?'primary':''}" onclick="WR.mode='quiz';render()">Trace</button>
+      <button class="btn ${WR.mode==='memory'?'primary':''}" onclick="WR.mode='memory';render()">From memory</button>
+      <button class="btn" onclick="say(${jsq(WR.char)})" aria-label="Hear it">${ICONS.sound}</button>
     </div>
-    <div class="subtle" id="writer-info">${esc(HP[WR.char]||'')}</div>
+    <div class="subtle" id="writer-info" style="text-align:center">${esc(HP[WR.char]||'')}</div>
   </div>
   <div class="char-picker">${ch.writing.map(c=>`<button class="tile ${c===WR.char?'sel':''}" onclick="WR.char=${jsq(c)};render()">${esc(c)}</button>`).join('')}</div>`;
 }
@@ -980,12 +1023,13 @@ async function initWriter(){
   try{
     const HW=await loadHanziWriter();
     box.innerHTML='';
-    WR.writer=HW.create(box, WR.char, { width:260, height:260, padding:18, showOutline:true, strokeAnimationSpeed:1, delayBetweenStrokes:250,
+    const outline=WR.mode!=='memory';
+    WR.writer=HW.create(box, WR.char, { width:260, height:260, padding:18, showOutline:outline, drawingWidth:16, strokeAnimationSpeed:1, delayBetweenStrokes:250,
       strokeColor: dark?'#ECF0ED':'#1C2426', outlineColor: dark?'#2C3838':'#D2DBD6', radicalColor:'#B8312F', drawingColor: dark?'#5FB394':'#2F7A63', highlightColor:'#C99A3B', showCharacter: WR.mode==='animate',
       charDataLoader:(c,onLoad,onErr)=>fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2/${encodeURIComponent(c)}.json`).then(r=>{ if(!r.ok) throw new Error('missing'); return r.json(); }).then(onLoad).catch(onErr) });
     const info=document.getElementById('writer-info');
     if(WR.mode==='animate'){ WR.writer.loopCharacterAnimation(); if(info) info.textContent=(HP[WR.char]||'')+' · tap a stroke count to see it drawn'; }
-    else { WR.writer.quiz({ showHintAfterMisses:2, onComplete:(s)=>{ if(info) info.textContent=`Done — ${s.totalMistakes} mistake${s.totalMistakes===1?'':'s'}. Tap “Trace it” to try again.`; record(`writing:${WR.char}`, s.totalMistakes<=2); } }); if(info) info.textContent='Draw each stroke in order. Hints appear after two misses.'; }
+    else { WR.writer.quiz({ showHintAfterMisses:outline?2:3, onComplete:(s)=>{ if(info) info.textContent=`Done — ${s.totalMistakes} mistake${s.totalMistakes===1?'':'s'}. Tap the mode button to try again.`; record(`writing:${WR.char}`, s.totalMistakes<=2); } }); if(info) info.textContent=outline?'Draw each stroke over the outline, in order. Hints appear after two misses.':'Write the character from memory. A hint appears after three misses.'; }
   }catch(e){ box.innerHTML=`<div class="subtle" style="padding:90px 20px;text-align:center">Stroke data could not be loaded. Connect to the internet once and try again.</div>`; }
 }
 
@@ -994,9 +1038,8 @@ async function initWriter(){
    ============================================================ */
 function renderSettings(){
   const sw=(key,label,desc)=>`<div class="set-row"><div class="body"><b>${label}</b><small>${desc}</small></div><button class="switch ${SET[key]?'on':''}" role="switch" aria-checked="${!!SET[key]}" onclick="SET.${key}=!SET.${key};saveSet();render()"></button></div>`;
-  const back = V.from ? `V=${JSON.stringify(V.from)};render()` : "go('home')";
   const voice=TTS.voice?`${TTS.voice.name} (${TTS.voice.lang})`:'none found';
-  return topbar(back,'Settings')+`
+  return topbar(true,'Settings')+`
   <div class="section-h">Display</div>
   <div class="set-row"><div class="body"><b>Character set</b><small>Simplified is the textbook default</small></div>
     <select style="width:auto" onchange="SET.script=this.value;saveSet();TTS.voice=TTS.pick(TTS.voices);render()"><option value="s" ${SET.script==='s'?'selected':''}>Simplified 简体</option><option value="t" ${SET.script==='t'?'selected':''}>Traditional 繁體</option></select></div>
@@ -1041,7 +1084,7 @@ document.addEventListener('keydown', e=>{
   if(e.key>='1'&&e.key<='9'&&(p.opts||c.opts)){ const n=+e.key-1; const len=(p.opts||c.opts).length; if(n<len){ pick(n); e.preventDefault(); } return; }
   if(e.key==='Enter'){ e.preventDefault();
     if(c.answered||p.t==='intro'||p.t==='listen') return nextPrompt();
-    if(p.t==='tone') return checkTone(); if(p.t==='wo') return checkWO(); if(p.t==='pos') return checkPos();
+    if(p.t==='tone') return checkTone(); if(p.t==='wo') return checkWO(); if(p.t==='pos') return checkPos(); if(p.t==='multi') return checkMulti();
     if(p.opts) return checkMC();
     if(p.t==='speak'&&c.heard!==null&&!c.listening) return scoreCurrent(true);
   }

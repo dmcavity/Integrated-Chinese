@@ -84,6 +84,7 @@ window.IC_CHAPTERS.push({
       exercises:[
         { t:'fill', zh:'我明天___你打电话。', zt:'我明天___你打電話。', opts:['给','跟','在','对'], ans:'给', py:'Wǒ míngtiān gěi nǐ dǎ diànhuà.', en:'I will call you tomorrow.', why:'打电话 takes 给 + person.' },
         { t:'pos', words:['老师','二年级','考试','。'], wt:['老師','二年級','考試','。'], insert:'给', ans:1, en:'The teacher gives the second year a test.', py:'Lǎoshī gěi èr niánjí kǎo shì.' },
+        { t:'multi', zh:'我明天___你打电话，___你见面。', zt:'我明天___你打電話，___你見面。', blanks:[['给','跟','在'],['跟','给','在']], ans:['给','跟'], py:'Wǒ míngtiān gěi nǐ dǎ diànhuà, gēn nǐ jiàn miàn.', en:'Tomorrow I will call you and meet with you.', why:'打电话 takes 给; 见面 takes 跟.' },
         { t:'wo', words:['你','明天','给','我','打','电话','吧','。'], en:'Call me tomorrow.', py:'Nǐ míngtiān gěi wǒ dǎ diànhuà ba.' },
         { t:'speak', zh:'我明天给你打电话。', zt:'我明天給你打電話。', py:'Wǒ míngtiān gěi nǐ dǎ diànhuà.', en:'I will call you tomorrow.' }
       ]
