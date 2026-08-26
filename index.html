@@ -19,6 +19,13 @@
   --t1:#2F7A63; --t2:#2B6FAF; --t3:#8A4FBF; --t4:#B8312F; --t0:#8A9699;
   --shadow:0 1px 2px rgba(20,30,30,.06),0 8px 24px -12px rgba(20,30,30,.18);
   --radius:14px;
+  /* section accents: grammar = cinnabar, dialogue = jade, drills = gold, review = indigo, speak = plum */
+  --c-grammar:#B8312F; --c-grammar-bg:#F8E9E7;
+  --c-dialogue:#2F7A63; --c-dialogue-bg:#E2EFE9;
+  --c-drill:#B07E1E;   --c-drill-bg:#F6ECD3;
+  --c-review:#3D5FA8;  --c-review-bg:#E3E9F6;
+  --c-speak:#8A4FBF;   --c-speak-bg:#EEE5F7;
+  --hero-grad:linear-gradient(135deg,#EAF0EA 0%,#F4F6F3 55%,#F6EEE8 100%);
   --zh:"Noto Serif SC","Noto Serif CJK SC","Songti SC","STSong","SimSun","PingFang SC","Microsoft YaHei",serif;
   --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -31,8 +38,19 @@
   --jade:#5FB394; --jade-2:#1F3A31; --gold:#E0B25C; --gold-2:#3A311C;
   --t1:#5FB394; --t2:#6FA8E6; --t3:#B58BE0; --t4:#E0716C;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  --c-grammar:#E0716C; --c-grammar-bg:#3A2423;
+  --c-dialogue:#5FB394; --c-dialogue-bg:#1E3A31;
+  --c-drill:#E0B25C;   --c-drill-bg:#3A311C;
+  --c-review:#8FA6E6;  --c-review-bg:#232D45;
+  --c-speak:#B58BE0;   --c-speak-bg:#2E2340;
+  --hero-grad:linear-gradient(135deg,#182220 0%,#141A1B 55%,#221B1A 100%);
 }
 *{box-sizing:border-box}
+@media (max-width:520px){html{font-size:17px}}
+html.android{font-size:18px}
+html.android .prompt-zh{font-size:2.1rem}
+html.android .opt{padding:14px 16px}
+html.android .tile{font-size:1.45rem;padding:8px 14px}
 html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
 body{min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
@@ -56,13 +74,15 @@ header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
 .pill.gold{background:var(--gold-2);color:var(--gold)}
 
 /* ---------- home ---------- */
-.hero{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding:8px 0 22px}
-.hero .glyph{font-family:var(--zh);font-size:4.4rem;line-height:1;color:var(--ink);position:relative;padding-right:6px}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding:18px 18px 20px;margin:0 -4px 18px;background:var(--hero-grad);border-radius:18px}
+.hero .glyph{font-family:var(--zh);font-size:4.4rem;line-height:1;color:var(--seal);position:relative;padding-right:6px}
 .hero h1{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin:0 0 4px;letter-spacing:-.01em}
 .hero p{margin:0;color:var(--ink-2);font-size:.92rem}
 .streak-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 
-.chapter-card{display:block;width:100%;text-align:left;background:var(--paper-2);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:14px;position:relative;box-shadow:var(--shadow);transition:transform .15s}
+.chapter-card{display:block;width:100%;text-align:left;background:var(--paper-2);border-radius:var(--radius);padding:18px 18px 16px 22px;margin-bottom:14px;position:relative;box-shadow:var(--shadow);transition:transform .15s;overflow:hidden}
+.chapter-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--acc,var(--seal))}
+.chapter-card .ttl .zh{color:var(--acc,var(--ink))}
 .chapter-card:hover{transform:translateY(-1px)}
 .chapter-card .num{font-family:var(--serif);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
 .chapter-card .ttl{font-family:var(--serif);font-size:1.35rem;margin:2px 0 2px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
@@ -82,22 +102,30 @@ header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
 .page-title h2{font-family:var(--serif);font-weight:500;font-size:1.4rem;margin:0}
 .page-title .zh{font-size:1.9rem}
 .subtle{color:var(--ink-faint);font-size:.85rem}
-.section-h{font-family:var(--serif);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin:26px 0 10px;display:flex;align-items:center;gap:10px}
-.section-h::after{content:"";flex:1;height:1px;background:var(--line)}
+.section-h{font-family:var(--serif);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--sec,var(--ink-faint));margin:26px 0 10px;display:flex;align-items:center;gap:10px}
+.section-h::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--sec,var(--line));transform:rotate(45deg)}
+.section-h::after{content:"";flex:1;height:1px;background:var(--sec,var(--line));opacity:.35}
+.sec-grammar{--sec:var(--c-grammar);--secbg:var(--c-grammar-bg)}
+.sec-dialogue{--sec:var(--c-dialogue);--secbg:var(--c-dialogue-bg)}
+.sec-drill{--sec:var(--c-drill);--secbg:var(--c-drill-bg)}
+.sec-review{--sec:var(--c-review);--secbg:var(--c-review-bg)}
+.sec-speak{--sec:var(--c-speak);--secbg:var(--c-speak-bg)}
 .row-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--paper-2);border-radius:12px;padding:12px 14px;margin-bottom:8px;transition:background .15s}
 .row-btn:hover{background:var(--paper-3)}
-.row-btn .lead{font-family:var(--zh);font-size:1.35rem;min-width:2.2em;text-align:center;color:var(--ink)}
+.row-btn{border-left:4px solid var(--sec,transparent)}
+.row-btn .lead{font-family:var(--zh);font-size:1.35rem;min-width:2.2em;height:2.2em;line-height:2.2em;border-radius:10px;text-align:center;color:var(--sec,var(--ink));background:var(--secbg,var(--paper-3))}
 .row-btn .body{flex:1;min-width:0}
 .row-btn .body b{display:block;font-weight:600;font-size:.98rem}
 .row-btn .body small{display:block;color:var(--ink-2);font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row-btn .meta{font-size:.78rem;color:var(--ink-faint);white-space:nowrap;text-align:right}
 .row-btn .meta .dots{display:flex;gap:3px;justify-content:flex-end;margin-top:3px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--paper-3)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--paper-3);border:1px solid var(--line)}
 .dot.ok{background:var(--jade)} .dot.bad{background:var(--seal)} .dot.part{background:var(--gold)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media (max-width:480px){.grid-2{grid-template-columns:1fr}}
-.tile-btn{background:var(--paper-2);border-radius:12px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:2px;transition:background .15s}
-.tile-btn:hover{background:var(--paper-3)}
+.tile-btn{background:var(--secbg,var(--paper-2));border-radius:12px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:2px;transition:filter .15s;border-left:4px solid var(--sec,transparent)}
+.tile-btn:hover{filter:brightness(.97)}
+.tile-btn b{color:var(--sec,var(--ink))}
 .tile-btn b{font-weight:600}
 .tile-btn small{color:var(--ink-2);font-size:.82rem}
 .draft-note{background:var(--gold-2);color:var(--ink);border-left:3px solid var(--gold);padding:10px 12px;border-radius:8px;font-size:.86rem;margin:10px 0}
@@ -110,7 +138,10 @@ header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
 .nav-btn:disabled{opacity:.3;cursor:default}
 .nav-btn svg{width:18px;height:18px}
 .nav-btn.on{background:var(--ink);color:var(--paper)}
-.card{background:var(--paper-2);border-radius:var(--radius);padding:22px 20px;box-shadow:var(--shadow);animation:pop .22s ease-out}
+.card{background:var(--paper-2);border-radius:var(--radius);padding:22px 20px;box-shadow:var(--shadow);animation:pop .22s ease-out;border-top:5px solid var(--sec,var(--seal))}
+.card .type-label{color:var(--sec,var(--seal))}
+.card .blank{border-color:var(--sec,var(--seal));color:var(--sec,var(--seal))}
+.card .prompt-q{padding:8px 12px;background:var(--secbg,var(--paper));border-radius:10px}
 @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .type-label{font-family:var(--serif);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--seal);margin-bottom:10px}
 .prompt-zh{font-family:var(--zh);font-size:1.85rem;line-height:1.5;margin:4px 0 4px;cursor:pointer}
@@ -143,12 +174,13 @@ header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
 .feedback .zh{font-size:1.15rem;color:var(--ink)}
 
 /* intro card */
-.intro .big{font-family:var(--zh);font-size:2.4rem;line-height:1.2;cursor:pointer}
+.intro .big{font-family:var(--zh);font-size:2.4rem;line-height:1.2;cursor:pointer;color:var(--c-grammar)}
+.intro .summary{padding:10px 12px;background:var(--c-grammar-bg);border-radius:10px}
 .intro .py-big{font-family:var(--serif);font-style:italic;color:var(--ink-2);margin-bottom:10px}
 .intro .summary{font-size:1rem;margin:6px 0 14px}
 .rule{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--line);font-size:.92rem}
 .rule .zh{font-size:1.1rem;color:var(--ink)}
-.ex{padding:10px 12px;border-radius:10px;background:var(--paper);margin-top:8px;cursor:pointer}
+.ex{padding:10px 12px;border-radius:10px;background:var(--paper);margin-top:8px;cursor:pointer;border-left:3px solid var(--c-dialogue)}
 .ex .zh{font-size:1.35rem}
 .ex .py{font-size:.9rem;display:block}
 .ex .en{font-size:.88rem;color:var(--ink-2)}
@@ -181,7 +213,7 @@ header.top .brand .zh{font-size:1.3rem;color:var(--ink);font-style:normal}
 /* speak */
 .speak-target{text-align:center;padding:10px 0 4px}
 .speak-target .prompt-zh{font-size:2.1rem}
-.mic-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:11px;background:var(--seal);color:#fff;font-weight:600}
+.mic-btn{background:var(--c-speak);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:11px;background:var(--seal);color:#fff;font-weight:600}
 .mic-btn svg{width:18px;height:18px}
 .mic-btn.listening{background:var(--ink);animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,49,47,.35)}50%{box-shadow:0 0 0 12px rgba(184,49,47,0)}}
@@ -219,7 +251,9 @@ textarea.free.en{font-family:var(--sans);font-size:1rem}
 .toggle{padding:7px 12px;border-radius:999px;background:var(--paper-2);font-size:.84rem;color:var(--ink-2);border:1.5px solid transparent}
 .toggle.on{border-color:var(--ink);color:var(--ink)}
 .line{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
-.line .who{font-family:var(--zh);font-size:.95rem;color:var(--seal);width:3.4em;padding-top:8px;text-align:right}
+.line .who{font-family:var(--zh);font-size:.95rem;width:3.4em;padding-top:8px;text-align:right;color:var(--who,var(--seal))}
+.line:nth-child(odd) .zh{}
+.line.playing{background:var(--c-dialogue-bg);border-radius:10px}
 .line .who.narr{color:var(--ink-faint)}
 .line .zh{font-size:1.45rem;line-height:1.5;cursor:pointer}
 .line .py{display:block;font-size:.9rem}
@@ -657,7 +691,7 @@ function renderHome(){
   </section>
   ${strip}
   ${CH.map((ch,i)=>{ const ids=idsFor(ch,p=>p.gid); const m=mastery(ids);
-    return `<button class="chapter-card" onclick="go('chapter',{ch:${i}})">
+    const accs=['var(--c-grammar)','var(--c-dialogue)','var(--c-review)','var(--c-speak)','var(--c-drill)','#C25A2C']; return `<button class="chapter-card" style="--acc:${accs[i%accs.length]}" onclick="go('chapter',{ch:${i}})">
       <div class="num">Chapter ${ch.number}${ch.draft?' · draft':''}</div>
       <div class="ttl"><span class="zh">${esc(Z(ch))}</span><span>${esc(ch.title)}</span></div>
       <div class="blurb">${esc(ch.blurb||'')}</div>
@@ -676,26 +710,26 @@ function renderChapter(ch){
   <p class="subtle">${esc(ch.blurb||'')}</p>
   ${ch.draft?`<div class="draft-note">This chapter was drafted from the textbook outline. Check the vocabulary and dialogue against your book and edit <code>chapter${ch.number}.js</code> where it differs.</div>`:''}
 
-  <div class="section-h">Grammar</div>
+  <div class="section-h sec-grammar">Grammar</div><div class="sec-grammar">
   ${ch.grammar.map((g,i)=>{ const ids=grammarIds(ch,g); const m=mastery(ids);
-    return `<button class="row-btn" onclick="startSession(${V.ch},'grammar',${i})"><span class="lead">${esc(Z(g).split(' ')[0])}</span><span class="body"><b>${esc(g.title)}</b><small>${esc(g.summary)}</small></span><span class="meta">${Math.round(m*100)}%${dots(ids)}</span></button>`; }).join('')}
+    return `<button class="row-btn" onclick="startSession(${V.ch},'grammar',${i})"><span class="lead">${esc(Z(g).split(' ')[0].slice(0,2))}</span><span class="body"><b>${esc(g.title)}</b><small>${esc(g.summary)}</small></span><span class="meta">${Math.round(m*100)}%${dots(ids)}</span></button>`; }).join('')}
 
-  <div class="section-h">Dialogue</div>
+  </div><div class="section-h sec-dialogue">Dialogue</div><div class="sec-dialogue">
   ${ch.dialogues.map(d=>`<button class="row-btn" onclick="go('dialogue',{ch:${V.ch},did:'${d.id}'})"><span class="lead">话</span><span class="body"><b>${esc(d.title)}</b><small>Read, listen, shadow, or role-play</small></span><span class="meta">${d.lines.length} lines</span></button>`).join('')}
   <button class="row-btn" onclick="startSession(${V.ch},'comp')"><span class="lead">问</span><span class="body"><b>Comprehension questions</b><small>Check you followed the story</small></span><span class="meta">${Math.round(mastery(idsFor(ch,p=>p.id.includes(':comp:')))*100)}%</span></button>
 
-  <div class="section-h">Drills</div>
-  <div class="grid-2">
+  </div><div class="section-h sec-drill">Drills</div>
+  <div class="grid-2 sec-drill">
     <button class="tile-btn" onclick="startSession(${V.ch},'tone')"><b>Tone drill</b><small>Hear a word, pick its tones</small></button>
     <button class="tile-btn" onclick="startSession(${V.ch},'mw')"><b>Measure words</b><small>${(ch.measureWords||[]).map(m=>m.mw).filter((x,i,a)=>a.indexOf(x)===i).join(' · ')}</small></button>
     <button class="tile-btn" onclick="startSession(${V.ch},'free')"><b>Translate freely</b><small>Type it out, compare or get AI feedback</small></button>
     <button class="tile-btn" onclick="go('writing',{ch:${V.ch}})"><b>Write characters</b><small>Stroke order and tracing</small></button>
     <button class="tile-btn" onclick="go('vocab',{ch:${V.ch}})"><b>Vocabulary reference</b><small>${ch.vocab.length} words, tap to hear</small></button>
-    <button class="tile-btn" onclick="startSession(${V.ch},'weak')"><b>Weak spots</b><small>${weak?weak+' prompts to revisit':'Nothing flagged yet'}</small></button>
+    <button class="tile-btn sec-review" onclick="startSession(${V.ch},'weak')"><b>Weak spots</b><small>${weak?weak+' prompts to revisit':'Nothing flagged yet'}</small></button>
   </div>
 
-  <div class="section-h">Review</div>
-  <button class="row-btn" onclick="startSession(${V.ch},'review')"><span class="lead">复</span><span class="body"><b>Mixed chapter review</b><small>About 20 prompts from every section</small></span><span class="meta">→</span></button>`;
+  <div class="section-h sec-review">Review</div>
+  <button class="row-btn sec-review" onclick="startSession(${V.ch},'review')"><span class="lead">复</span><span class="body"><b>Mixed chapter review</b><small>About 20 prompts from every section</small></span><span class="meta">→</span></button>`;
 }
 </script>
 <script>
@@ -730,8 +764,9 @@ function renderSession(){
     <button class="nav-btn" onclick="navFwd()" ${SS.fwd.length?'':'disabled'} aria-label="Next">▶</button>
   </div>
   <div class="subtle" style="margin-bottom:8px">${esc(ch.title)} · ${esc(SS.label)}</div>
-  <div class="card">${body}</div>`;
+  <div class="card ${secFor(p)}">${body}</div>`;
 }
+function secFor(p){ if(p.t==='speak'||p.t==='listen') return 'sec-speak'; if(p.t==='tone'||p.id.includes(':mw:')) return 'sec-drill'; if(p.id.includes(':comp:')||p.t==='free') return 'sec-dialogue'; if(SS.mode==='review'||SS.mode==='weak') return p.gid?'sec-grammar':'sec-review'; return 'sec-grammar'; }
 function togglePinyin(){ SET.pinyin=SET.pinyin==='show'?'hide':'show'; saveSet(); render(); }
 function afterSessionRender(){
   if(!SS||SS.done) return; const p=curPrompt(); const c=SS.cur;
@@ -962,12 +997,12 @@ function renderDialogue(ch, did){
     <button class="toggle" onclick="playAll()">▶ Play all</button>
     <button class="toggle" onclick="TTS.stop();DLG.playing=-1;render()">■ Stop</button>
   </div>
-  ${d.lines.map((l,i)=>`<div class="line ${DLG.playing===i?'playing':''}" id="line-${i}">
+  ${d.lines.map((l,i)=>`<div class="line ${DLG.playing===i?'playing':''}" id="line-${i}" style="--who:${['var(--c-grammar)','var(--c-review)','var(--c-dialogue)','var(--c-speak)'][Math.max(0,d.roles.indexOf(l.who))%4]}">
     <div class="who ${narr?'narr':''} zh">${narr?'':esc(l.who)}</div>
     <div><div class="zh" onclick="playLine(${i})">${esc(Z(l))}</div>${SET.pinyin==='show'?`<span class="py">${esc(l.py)}</span>`:''}${DLG.en?`<div class="en">${esc(l.en)}</div>`:''}</div>
   </div>`).join('')}
-  <div class="section-h">Practise this dialogue</div>
-  <div class="grid-2">
+  <div class="section-h sec-speak">Practise this dialogue</div>
+  <div class="grid-2 sec-speak">
     <button class="tile-btn" onclick="startSession(${V.ch},'shadow','${d.id}')"><b>Shadow every line</b><small>Hear each line, then say it back and compare</small></button>
     ${narr?'':d.roles.map(r=>`<button class="tile-btn" onclick="startSession(${V.ch},'roleplay','${d.id}|${esc(r)}')"><b>Play <span class="zh">${esc(r)}</span></b><small>The app speaks the others; you speak ${esc(r)}'s lines</small></button>`).join('')}
     <button class="tile-btn" onclick="startSession(${V.ch},'comp')"><b>Comprehension questions</b><small>Check you followed the story</small></button>
@@ -1108,6 +1143,7 @@ document.addEventListener('keydown', e=>{
 })();
 
 /* ---------- boot ---------- */
+if(/Android/i.test(navigator.userAgent)) document.documentElement.classList.add('android');
 applyTheme();
 if(!CH.length){ app.innerHTML='<div class="err"><b>No chapters loaded.</b> Make sure chapter5.js and chapter6.js sit next to index.html.</div>'; }
 else render();
