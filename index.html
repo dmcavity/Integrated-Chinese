@@ -265,6 +265,10 @@ input[type=range]{width:120px}
 </head>
 <body>
 <div id="app"></div>
+<script src="chapter1.js"></script>
+<script src="chapter2.js"></script>
+<script src="chapter3.js"></script>
+<script src="chapter4.js"></script>
 <script src="chapter5.js"></script>
 <script src="chapter6.js"></script>
 <script>
@@ -774,7 +778,7 @@ function renderMulti(p){
   let k=0; const zh=Z(p);
   const shown=zh.replace(/___/g,()=>{ const i=k++; const w=c.answered?p.ans[i]:c.multi[i]; const cls=c.answered?(c.multi[i]===p.ans[i]?'right':'wrong'):(c.active===i?'active':'');
     return `<span class="blank ${cls}" onclick="SS.cur.active=${i};render()">${w?esc(w):'&nbsp;'}</span>`; });
-  return `<div class="type-label">${esc(p.label||'Fill both blanks')}</div>
+  return `<div class="type-label">${esc(p.label||'Fill the blanks')}</div>
     <div class="prompt-zh">${shown}</div>
     ${c.answered&&p.py&&SET.pinyin==='show'?`<div class="prompt-py">${esc(p.py)}</div>`:''}
     <div class="prompt-en">${esc(p.en||'')}</div>

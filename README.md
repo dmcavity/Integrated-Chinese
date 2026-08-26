@@ -3,6 +3,7 @@
 Open `index.html` in Chrome, Edge or Safari (speech recognition needs one of these; Firefox has no recognition API). Keep the three files together:
 
 - `index.html` — the app
+- `chapter1.js` … `chapter4.js` — Chapters 1–4 (vocab and grammar from the textbook; dialogues are original scenes using each chapter's vocabulary, not the book's text)
 - `chapter5.js` — Chapter 5 content (from your study guide)
 - `chapter6.js` — Chapter 6 content (draft from the textbook outline; check against your book)
 
