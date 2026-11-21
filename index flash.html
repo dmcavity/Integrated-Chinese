@@ -1,0 +1,3248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>汉字卡 · HSK Flashcards</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#A8352A">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="汉字卡">
+<script>
+(function(){
+  var urls=[
+    "https://cdnjs.cloudflare.com/ajax/libs/hanzi-writer/3.7.2/hanzi-writer.min.js",
+    "https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js"
+  ];
+  function tryLoad(i){
+    if(i>=urls.length){window.__hwFailed=true;return;}
+    var s=document.createElement("script");
+    s.src=urls[i];
+    s.onerror=function(){tryLoad(i+1);};
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
+})();
+</script>
+<style>
+:root{
+  --paper:#FBF8F1;
+  --ink:#26231E;
+  --cinnabar:#A8352A;
+  --cinnabar-soft:#E5B8B0;
+  --jade:#2E7D63;
+  --sand:#8A8478;
+  --line:#E7E0D2;
+  --card:#FFFFFF;
+  --hanzi-font:"Kaiti SC","KaiTi","STKaiti","AR PL UKai CN","Noto Serif SC",serif;
+  --ui-font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--ui-font);
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.45;
+  padding:max(env(safe-area-inset-top),12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  max-width:520px;margin:0 auto;
+}
+.screen{display:none}
+.screen.active{display:block;animation:rise .25s ease}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- Home ---------- */
+.masthead{display:flex;align-items:center;gap:14px;padding:14px 0 18px;border-bottom:1px solid var(--line)}
+.masthead .chop{
+  width:52px;height:52px;flex:0 0 52px;background:var(--cinnabar);color:#fff;
+  font-family:var(--hanzi-font);font-size:30px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;transform:rotate(-3deg);box-shadow:0 2px 0 rgba(120,30,20,.35);
+}
+.masthead h1{font-size:22px;letter-spacing:.5px}
+.masthead .sub{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--sand);margin-top:2px}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 4px}
+.toggle-row span{font-size:14px;color:var(--sand)}
+.switch{position:relative;width:46px;height:26px;background:#DDD5C4;border-radius:13px;transition:.2s;border:none;cursor:pointer}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.switch.on{background:var(--jade)}
+.switch.on::after{left:23px}
+
+.seg{display:flex;background:#EFE9DC;border-radius:11px;padding:3px;margin-top:16px}
+.seg button{flex:1;padding:10px 0;border:none;border-radius:8px;background:transparent;font-size:14px;font-weight:600;color:var(--sand);cursor:pointer;transition:.15s}
+.seg button .zi{font-family:var(--hanzi-font);font-size:16px;margin-right:4px}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(60,50,30,.15)}
+.seg button.on .zi{color:var(--cinnabar)}
+#back-btn,#next-btn{font-size:30px;line-height:.8;padding-bottom:4px}
+.level{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px}
+.level-top{display:flex;align-items:center;gap:12px}
+.level .chop{width:44px;height:44px;flex:0 0 44px;background:var(--cinnabar);color:#fff;font-family:var(--hanzi-font);font-size:26px;display:flex;align-items:center;justify-content:center;border-radius:5px;transform:rotate(-2deg)}
+.level h2{font-size:17px}
+.level .count{font-size:12px;color:var(--sand)}
+.statline{font-size:12px;color:var(--sand);margin-top:10px;display:flex;gap:14px;flex-wrap:wrap}
+.statline b{color:var(--ink);font-weight:600}
+.bar{height:4px;background:#EFE9DC;border-radius:2px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--jade);border-radius:2px;transition:width .3s}
+.mode-btns{display:flex;gap:8px;margin-top:12px}
+.mode-btns button{flex:1;padding:11px 0;border-radius:9px;border:1px solid var(--line);background:var(--paper);font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
+.mode-btns button .zi{font-family:var(--hanzi-font);color:var(--cinnabar);margin-right:6px;font-size:16px}
+.mode-btns button:active{transform:scale(.97)}
+.review-btn{margin-top:8px;width:100%;padding:9px 0;border-radius:9px;border:1px dashed var(--cinnabar-soft);background:transparent;color:var(--cinnabar);font-size:13px;font-weight:600;cursor:pointer}
+.review-btn{margin-top:8px;width:100%;padding:9px 0;border-radius:9px;border:1px dashed var(--cinnabar-soft);background:transparent;color:var(--cinnabar);font-size:13px;font-weight:600;cursor:pointer}
+.reset{display:block;margin:26px auto 0;background:none;border:none;color:var(--sand);font-size:12px;text-decoration:underline;cursor:pointer}
+.notice{font-size:11px;color:var(--sand);text-align:center;margin-top:16px}
+
+/* ---------- Card session ---------- */
+.session-head{display:flex;align-items:center;gap:12px;padding:10px 0 14px}
+.session-head button{background:none;border:none;font-size:22px;color:var(--sand);cursor:pointer;line-height:1}
+.session-head .info{font-size:12px;color:var(--sand);letter-spacing:.08em;text-transform:uppercase}
+.progress{flex:1;height:4px;background:#EFE9DC;border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--cinnabar);transition:width .25s}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 18px;min-height:340px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;position:relative;
+  box-shadow:0 1px 3px rgba(60,50,30,.06)}
+.card .corner{position:absolute;top:12px;right:12px;width:30px;height:30px;background:var(--cinnabar);color:#fff;
+  font-family:var(--hanzi-font);font-size:17px;display:flex;align-items:center;justify-content:center;border-radius:4px;transform:rotate(-3deg);opacity:.92}
+.card.swap{animation:swap .28s ease}
+@keyframes swap{0%{transform:rotateY(88deg);opacity:0}100%{transform:none;opacity:1}}
+
+.face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;width:100%}
+.flip-back{position:absolute;top:10px;left:12px;background:none;border:none;color:var(--sand);font-size:13px;font-weight:600;cursor:pointer;padding:4px}
+.flip-back:active{color:var(--ink)}
+.prompt-label{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--sand)}
+.big-hanzi{font-family:var(--hanzi-font);font-size:96px;line-height:1.15;text-align:center;word-break:keep-all}
+.big-hanzi.long{font-size:64px}
+.small-hanzi{font-family:var(--hanzi-font);font-size:34px;color:var(--sand)}
+.english{font-size:22px;font-weight:600;text-align:center;max-width:300px}
+.pinyin-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--cinnabar-soft);background:#FDF6F4;
+  color:var(--cinnabar);font-size:22px;font-weight:600;padding:8px 18px;border-radius:999px;cursor:pointer;font-family:Georgia,serif}
+.pinyin-pill:active{transform:scale(.96)}
+.hint{font-size:12px;color:var(--sand)}
+.ex-btn{padding:8px 18px;border-radius:999px;border:1px dashed var(--cinnabar-soft);background:transparent;color:var(--cinnabar);font-size:13px;font-weight:600;cursor:pointer}
+.example{background:#FAF6EC;border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-align:center;max-width:100%}
+.ex-hanzi{font-family:var(--hanzi-font);font-size:21px;cursor:pointer;line-height:1.5}
+.ex-pinyin{color:var(--cinnabar);font-family:Georgia,serif;font-size:14px;margin-top:4px}
+.ex-english{color:var(--sand);font-size:13px;margin-top:2px}
+.tap-flip{margin-top:6px;padding:12px 34px;border-radius:999px;border:none;background:var(--ink);color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.answers{display:flex;gap:10px;width:100%;margin-top:4px}
+.answers button{flex:1;padding:13px 0;border-radius:10px;border:none;font-size:15px;font-weight:700;cursor:pointer}
+.btn-missed{background:#F6E4E1;color:var(--cinnabar)}
+.btn-tent{background:#F7EDD8;color:#8F6A1C}
+.btn-got{background:#E2EFE9;color:var(--jade)}
+.answers button{font-size:14px}
+.chips{display:flex;gap:6px;margin-top:10px}
+.chip{flex:1;padding:8px 2px;border-radius:9px;border:1px dashed;background:transparent;font-size:12px;font-weight:600;cursor:pointer;line-height:1.3}
+.chip b{display:block;font-size:15px}
+.chip i{display:block;font-style:normal;font-size:10px;opacity:.75;margin-top:1px}
+.chip.s{color:var(--jade);border-color:#BCD8CC}
+.chip.t{color:#8F6A1C;border-color:#E4CFA1}
+.chip.n{color:var(--cinnabar);border-color:var(--cinnabar-soft)}
+.chip:disabled{opacity:.35;cursor:default}
+.answers button:active{transform:scale(.97)}
+
+/* writing canvas */
+.squares{display:flex;gap:8px;justify-content:center;max-width:100%;overflow-x:auto;padding:2px}
+.sq{position:relative;flex:0 0 auto;background:#fff;border:2px solid var(--cinnabar-soft);border-radius:4px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg stroke='%23EDD3CD' stroke-width='1' stroke-dasharray='4 4'%3E%3Cline x1='0' y1='0' x2='100' y2='100'/%3E%3Cline x1='100' y1='0' x2='0' y2='100'/%3E%3Cline x1='50' y1='0' x2='50' y2='100'/%3E%3Cline x1='0' y1='50' x2='100' y2='50'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:100% 100%}
+.sq canvas{position:absolute;inset:0;touch-action:none;transition:opacity .4s;z-index:1}
+.sq .writer{position:absolute;inset:0;pointer-events:none;z-index:0}
+.sq .writer.faint{opacity:.42} /* View: same HanziWriter rendering as Write, just faint so ink drawn on top reads clearly */
+.sq .fallback-char{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--hanzi-font);color:var(--cinnabar);opacity:.75}
+.canvas-tools{display:flex;gap:6px;margin-top:2px}
+.canvas-tools button{flex:1;padding:9px 2px;border-radius:9px;font-size:12.5px;font-weight:700;letter-spacing:.01em;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);transition:.15s;white-space:nowrap}
+.canvas-tools button.on{background:#F7EDD8;border-color:#E4CFA1;color:#8F6A1C}
+.canvas-tools button:disabled{opacity:.4;cursor:default}
+
+/* done screen */
+.done-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:36px 20px;text-align:center;margin-top:30px}
+.done-card .zi{font-family:var(--hanzi-font);font-size:60px;color:var(--cinnabar)}
+.done-card h2{margin-top:10px;font-size:20px}
+.done-card p{color:var(--sand);margin-top:8px;font-size:14px}
+.done-card .row{display:flex;gap:10px;margin-top:22px}
+.done-card .row button{flex:1;padding:13px 0;border-radius:10px;border:none;font-size:15px;font-weight:700;cursor:pointer}
+.again{background:var(--ink);color:#fff}
+.home-btn{background:#EFE9DC;color:var(--ink)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<!-- ================= HOME ================= -->
+<div class="screen active" id="scr-home">
+  <div class="masthead">
+    <div class="chop">字</div>
+    <div>
+      <h1>汉字卡</h1>
+      <div class="sub">HSK Flashcard Drills</div>
+    </div>
+  </div>
+  <div class="seg" id="mode-seg">
+    <button data-md="reading" class="on"><span class="zi">认</span> Reading</button>
+    <button data-md="writing"><span class="zi">写</span> Writing</button>
+  </div>
+  <div class="toggle-row">
+    <span>Shuffle cards</span>
+    <button class="switch on" id="shuffle-toggle" aria-label="Toggle shuffle"></button>
+  </div>
+  <div id="levels"></div>
+  <button class="reset" id="reset-btn">Reset all progress</button>
+  <p class="notice">Tip: tap any pinyin to hear the pronunciation.</p>
+</div>
+
+<!-- ================= CARD ================= -->
+<div class="screen" id="scr-card">
+  <div class="session-head">
+    <button id="exit-btn" aria-label="Exit session">✕</button>
+    <button id="back-btn" aria-label="Previous card">‹</button>
+    <div class="progress"><i id="prog-bar"></i></div>
+    <button id="next-btn" aria-label="Skip to next card">›</button>
+    <div class="info" id="session-info"></div>
+  </div>
+  <div class="card" id="card"></div>
+</div>
+
+<!-- ================= DONE ================= -->
+<div class="screen" id="scr-done">
+  <div class="done-card">
+    <div class="zi">好</div>
+    <h2>Session complete</h2>
+    <p id="done-summary"></p>
+    <div class="row">
+      <button class="home-btn" id="done-home">Home</button>
+      <button class="again" id="done-again">Go again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ VOCABULARY ============ */
+/* [hanzi, pinyin, english, level] */
+const V=[
+/* ---------- HSK 1 ---------- */
+["爱","ài","to love",1],
+["八","bā","eight",1],
+["爸爸","bàba","dad",1],
+["杯子","bēizi","cup; glass",1],
+["北京","Běijīng","Beijing",1],
+["本","běn","measure word for books",1],
+["不","bù","no; not",1],
+["不客气","bú kèqi","you're welcome",1],
+["菜","cài","dish; vegetable",1],
+["茶","chá","tea",1],
+["吃","chī","to eat",1],
+["出租车","chūzūchē","taxi",1],
+["打电话","dǎ diànhuà","to make a phone call",1],
+["大","dà","big",1],
+["的","de","possessive particle",1],
+["点","diǎn","o'clock; a little",1],
+["电脑","diànnǎo","computer",1],
+["电视","diànshì","television",1],
+["电影","diànyǐng","movie",1],
+["东西","dōngxi","thing; stuff",1],
+["都","dōu","all; both",1],
+["读","dú","to read",1],
+["对不起","duìbuqǐ","sorry",1],
+["多","duō","many; much",1],
+["多少","duōshao","how many; how much",1],
+["儿子","érzi","son",1],
+["二","èr","two",1],
+["饭店","fàndiàn","restaurant; hotel",1],
+["飞机","fēijī","airplane",1],
+["分钟","fēnzhōng","minute",1],
+["高兴","gāoxìng","happy; glad",1],
+["个","gè","general measure word",1],
+["工作","gōngzuò","work; job",1],
+["狗","gǒu","dog",1],
+["汉语","Hànyǔ","Chinese language",1],
+["好","hǎo","good; fine",1],
+["号","hào","date; number",1],
+["喝","hē","to drink",1],
+["和","hé","and; with",1],
+["很","hěn","very",1],
+["后面","hòumiàn","behind; back",1],
+["回","huí","to return",1],
+["会","huì","can; will",1],
+["几","jǐ","how many; a few",1],
+["家","jiā","home; family",1],
+["叫","jiào","to be called",1],
+["今天","jīntiān","today",1],
+["九","jiǔ","nine",1],
+["开","kāi","to open; to drive",1],
+["看","kàn","to look; to watch",1],
+["看见","kànjiàn","to see",1],
+["块","kuài","yuan (money); piece",1],
+["来","lái","to come",1],
+["老师","lǎoshī","teacher",1],
+["了","le","completed-action particle",1],
+["冷","lěng","cold",1],
+["里","lǐ","inside",1],
+["六","liù","six",1],
+["妈妈","māma","mom",1],
+["吗","ma","question particle",1],
+["买","mǎi","to buy",1],
+["猫","māo","cat",1],
+["没关系","méi guānxi","it doesn't matter",1],
+["没有","méiyǒu","to not have",1],
+["米饭","mǐfàn","cooked rice",1],
+["名字","míngzi","name",1],
+["明天","míngtiān","tomorrow",1],
+["哪","nǎ","which",1],
+["哪儿","nǎr","where",1],
+["那","nà","that",1],
+["呢","ne","question particle",1],
+["能","néng","can; to be able to",1],
+["你","nǐ","you",1],
+["年","nián","year",1],
+["女儿","nǚ'ér","daughter",1],
+["朋友","péngyou","friend",1],
+["漂亮","piàoliang","pretty; beautiful",1],
+["苹果","píngguǒ","apple",1],
+["七","qī","seven",1],
+["前面","qiánmiàn","front; ahead",1],
+["钱","qián","money",1],
+["请","qǐng","please; to invite",1],
+["去","qù","to go",1],
+["热","rè","hot",1],
+["人","rén","person",1],
+["认识","rènshi","to know (someone)",1],
+["三","sān","three",1],
+["商店","shāngdiàn","shop; store",1],
+["上","shàng","up; on; above",1],
+["上午","shàngwǔ","morning",1],
+["少","shǎo","few; little",1],
+["谁","shéi","who",1],
+["什么","shénme","what",1],
+["十","shí","ten",1],
+["时候","shíhou","time; moment",1],
+["是","shì","to be",1],
+["书","shū","book",1],
+["水","shuǐ","water",1],
+["水果","shuǐguǒ","fruit",1],
+["睡觉","shuìjiào","to sleep",1],
+["说","shuō","to speak; to say",1],
+["四","sì","four",1],
+["岁","suì","years old",1],
+["他","tā","he; him",1],
+["她","tā","she; her",1],
+["太","tài","too (much)",1],
+["天气","tiānqì","weather",1],
+["听","tīng","to listen",1],
+["同学","tóngxué","classmate",1],
+["喂","wéi","hello (on the phone)",1],
+["我","wǒ","I; me",1],
+["我们","wǒmen","we; us",1],
+["五","wǔ","five",1],
+["喜欢","xǐhuan","to like",1],
+["下","xià","down; below; next",1],
+["下午","xiàwǔ","afternoon",1],
+["下雨","xiàyǔ","to rain",1],
+["先生","xiānsheng","Mr.; sir; husband",1],
+["现在","xiànzài","now",1],
+["想","xiǎng","to want; to think",1],
+["小","xiǎo","small",1],
+["小姐","xiǎojiě","Miss; young lady",1],
+["些","xiē","some; several",1],
+["写","xiě","to write",1],
+["谢谢","xièxie","thank you",1],
+["星期","xīngqī","week",1],
+["学生","xuésheng","student",1],
+["学习","xuéxí","to study",1],
+["学校","xuéxiào","school",1],
+["一","yī","one",1],
+["衣服","yīfu","clothes",1],
+["医生","yīshēng","doctor",1],
+["医院","yīyuàn","hospital",1],
+["椅子","yǐzi","chair",1],
+["一点儿","yìdiǎnr","a little bit",1],
+["有","yǒu","to have; there is",1],
+["月","yuè","month; moon",1],
+["再见","zàijiàn","goodbye",1],
+["在","zài","at; in; on",1],
+["怎么","zěnme","how",1],
+["怎么样","zěnmeyàng","how about; how is it",1],
+["这","zhè","this",1],
+["中国","Zhōngguó","China",1],
+["中午","zhōngwǔ","noon",1],
+["住","zhù","to live; to stay",1],
+["桌子","zhuōzi","table; desk",1],
+["字","zì","character; word",1],
+["昨天","zuótiān","yesterday",1],
+["坐","zuò","to sit",1],
+["做","zuò","to do; to make",1],
+/* ---------- HSK 2 ---------- */
+["吧","ba","suggestion particle",2],
+["白","bái","white",2],
+["百","bǎi","hundred",2],
+["帮助","bāngzhù","to help",2],
+["报纸","bàozhǐ","newspaper",2],
+["比","bǐ","than; to compare",2],
+["别","bié","don't",2],
+["宾馆","bīnguǎn","hotel",2],
+["长","cháng","long",2],
+["唱歌","chànggē","to sing",2],
+["出","chū","to go out",2],
+["穿","chuān","to wear",2],
+["次","cì","time (occurrence)",2],
+["从","cóng","from",2],
+["错","cuò","wrong; mistake",2],
+["打篮球","dǎ lánqiú","to play basketball",2],
+["大家","dàjiā","everyone",2],
+["到","dào","to arrive; to reach",2],
+["得","de","structural particle (degree)",2],
+["等","děng","to wait",2],
+["弟弟","dìdi","younger brother",2],
+["第一","dì-yī","first",2],
+["懂","dǒng","to understand",2],
+["对","duì","correct; toward",2],
+["房间","fángjiān","room",2],
+["非常","fēicháng","very; extremely",2],
+["服务员","fúwùyuán","waiter; attendant",2],
+["高","gāo","tall; high",2],
+["告诉","gàosu","to tell",2],
+["哥哥","gēge","older brother",2],
+["给","gěi","to give; for",2],
+["公共汽车","gōnggòng qìchē","bus",2],
+["公司","gōngsī","company",2],
+["贵","guì","expensive",2],
+["过","guo","experience particle",2],
+["还","hái","still; also",2],
+["孩子","háizi","child",2],
+["好吃","hǎochī","delicious",2],
+["黑","hēi","black; dark",2],
+["红","hóng","red",2],
+["火车站","huǒchēzhàn","train station",2],
+["机场","jīchǎng","airport",2],
+["鸡蛋","jīdàn","egg",2],
+["件","jiàn","measure word for clothes/items",2],
+["教室","jiàoshì","classroom",2],
+["姐姐","jiějie","older sister",2],
+["介绍","jièshào","to introduce",2],
+["进","jìn","to enter",2],
+["近","jìn","near; close",2],
+["就","jiù","then; right away",2],
+["觉得","juéde","to feel; to think",2],
+["咖啡","kāfēi","coffee",2],
+["开始","kāishǐ","to begin; to start",2],
+["考试","kǎoshì","exam; to take a test",2],
+["可能","kěnéng","maybe; possible",2],
+["可以","kěyǐ","can; may",2],
+["课","kè","class; lesson",2],
+["快","kuài","fast; quick",2],
+["快乐","kuàilè","happy",2],
+["累","lèi","tired",2],
+["离","lí","away from",2],
+["两","liǎng","two (of something)",2],
+["零","líng","zero",2],
+["路","lù","road; way",2],
+["旅游","lǚyóu","to travel",2],
+["卖","mài","to sell",2],
+["慢","màn","slow",2],
+["忙","máng","busy",2],
+["每","měi","every; each",2],
+["妹妹","mèimei","younger sister",2],
+["门","mén","door; gate",2],
+["面条","miàntiáo","noodles",2],
+["男","nán","male; man",2],
+["您","nín","you (polite)",2],
+["牛奶","niúnǎi","milk",2],
+["女","nǚ","female; woman",2],
+["旁边","pángbiān","beside; next to",2],
+["跑步","pǎobù","to run; to jog",2],
+["便宜","piányi","cheap",2],
+["票","piào","ticket",2],
+["妻子","qīzi","wife",2],
+["起床","qǐchuáng","to get up",2],
+["千","qiān","thousand",2],
+["铅笔","qiānbǐ","pencil",2],
+["晴","qíng","sunny; clear",2],
+["去年","qùnián","last year",2],
+["让","ràng","to let; to make",2],
+["日","rì","day; sun",2],
+["上班","shàngbān","to go to work",2],
+["身体","shēntǐ","body; health",2],
+["生病","shēngbìng","to get sick",2],
+["生日","shēngrì","birthday",2],
+["时间","shíjiān","time",2],
+["事情","shìqing","matter; affair",2],
+["手表","shǒubiǎo","wristwatch",2],
+["手机","shǒujī","mobile phone",2],
+["说话","shuōhuà","to speak; to talk",2],
+["送","sòng","to give (a gift); to deliver",2],
+["虽然","suīrán","although",2],
+["所以","suǒyǐ","so; therefore",2],
+["它","tā","it",2],
+["踢足球","tī zúqiú","to play soccer",2],
+["题","tí","question; problem",2],
+["跳舞","tiàowǔ","to dance",2],
+["外","wài","outside",2],
+["完","wán","to finish",2],
+["玩","wán","to play; to have fun",2],
+["晚上","wǎnshang","evening; night",2],
+["往","wǎng","toward",2],
+["为什么","wèishénme","why",2],
+["问","wèn","to ask",2],
+["问题","wèntí","question; problem",2],
+["西瓜","xīguā","watermelon",2],
+["希望","xīwàng","to hope; hope",2],
+["洗","xǐ","to wash",2],
+["小时","xiǎoshí","hour",2],
+["笑","xiào","to laugh; to smile",2],
+["新","xīn","new",2],
+["姓","xìng","surname; to be surnamed",2],
+["休息","xiūxi","to rest",2],
+["雪","xuě","snow",2],
+["颜色","yánsè","color",2],
+["眼睛","yǎnjing","eye",2],
+["羊肉","yángròu","mutton; lamb",2],
+["药","yào","medicine",2],
+["要","yào","to want; will",2],
+["也","yě","also; too",2],
+["已经","yǐjīng","already",2],
+["一起","yìqǐ","together",2],
+["意思","yìsi","meaning",2],
+["阴","yīn","cloudy; overcast",2],
+["因为","yīnwèi","because",2],
+["游泳","yóuyǒng","to swim",2],
+["右边","yòubian","right side",2],
+["鱼","yú","fish",2],
+["远","yuǎn","far",2],
+["运动","yùndòng","sports; exercise",2],
+["再","zài","again",2],
+["早上","zǎoshang","(early) morning",2],
+["丈夫","zhàngfu","husband",2],
+["找","zhǎo","to look for; to find",2],
+["着","zhe","ongoing-action particle",2],
+["真","zhēn","really; true",2],
+["正在","zhèngzài","in the middle of (doing)",2],
+["知道","zhīdào","to know",2],
+["准备","zhǔnbèi","to prepare",2],
+["走","zǒu","to walk; to leave",2],
+["最","zuì","most",2],
+["左边","zuǒbian","left side",2],
+["但是","dànshì","but; however",2],
+/* ---------- HSK 3 ---------- */
+["阿姨","āyí","aunt; auntie",3],
+["啊","a","exclamation particle",3],
+["矮","ǎi","short (height)",3],
+["爱好","àihào","hobby",3],
+["安静","ānjìng","quiet",3],
+["把","bǎ","object-marker particle",3],
+["班","bān","class; team",3],
+["搬","bān","to move (things)",3],
+["办法","bànfǎ","method; way",3],
+["办公室","bàngōngshì","office",3],
+["半","bàn","half",3],
+["帮忙","bāngmáng","to help out",3],
+["包","bāo","bag; to wrap",3],
+["饱","bǎo","full (after eating)",3],
+["北方","běifāng","the north",3],
+["被","bèi","passive-voice particle",3],
+["鼻子","bízi","nose",3],
+["比较","bǐjiào","rather; to compare",3],
+["比赛","bǐsài","match; competition",3],
+["笔记本","bǐjìběn","notebook",3],
+["必须","bìxū","must",3],
+["变化","biànhuà","change",3],
+["别人","biérén","other people",3],
+["冰箱","bīngxiāng","refrigerator",3],
+["不但","búdàn","not only",3],
+["菜单","càidān","menu",3],
+["参加","cānjiā","to participate; to attend",3],
+["草","cǎo","grass",3],
+["层","céng","floor; layer",3],
+["差","chà","lacking; poor",3],
+["超市","chāoshì","supermarket",3],
+["衬衫","chènshān","shirt",3],
+["成绩","chéngjì","grades; results",3],
+["城市","chéngshì","city",3],
+["迟到","chídào","to be late",3],
+["除了","chúle","besides; except",3],
+["船","chuán","boat; ship",3],
+["春","chūn","spring",3],
+["词语","cíyǔ","word; term",3],
+["聪明","cōngming","smart; clever",3],
+["打扫","dǎsǎo","to clean; to sweep",3],
+["打算","dǎsuàn","to plan",3],
+["带","dài","to bring; to carry",3],
+["担心","dānxīn","to worry",3],
+["蛋糕","dàngāo","cake",3],
+["当然","dāngrán","of course",3],
+["地","de","adverbial particle",3],
+["灯","dēng","lamp; light",3],
+["地方","dìfang","place",3],
+["地铁","dìtiě","subway",3],
+["地图","dìtú","map",3],
+["电梯","diàntī","elevator",3],
+["电子邮件","diànzǐ yóujiàn","email",3],
+["东","dōng","east",3],
+["冬","dōng","winter",3],
+["动物","dòngwù","animal",3],
+["短","duǎn","short (length)",3],
+["段","duàn","section; paragraph",3],
+["锻炼","duànliàn","to exercise",3],
+["多么","duōme","how; what a",3],
+["饿","è","hungry",3],
+["耳朵","ěrduo","ear",3],
+["发","fā","to send; to emit",3],
+["发烧","fāshāo","to have a fever",3],
+["发现","fāxiàn","to discover",3],
+["方便","fāngbiàn","convenient",3],
+["放","fàng","to put; to place",3],
+["放心","fàngxīn","to be at ease",3],
+["分","fēn","minute; cent; to divide",3],
+["附近","fùjìn","nearby",3],
+["复习","fùxí","to review",3],
+["干净","gānjìng","clean",3],
+["感冒","gǎnmào","to catch a cold",3],
+["感兴趣","gǎn xìngqù","to be interested in",3],
+["刚才","gāngcái","just now",3],
+["个子","gèzi","height; build",3],
+["根据","gēnjù","according to",3],
+["跟","gēn","with; to follow",3],
+["更","gèng","even more",3],
+["公斤","gōngjīn","kilogram",3],
+["公园","gōngyuán","park",3],
+["故事","gùshi","story",3],
+["刮风","guāfēng","to be windy",3],
+["关","guān","to close; to turn off",3],
+["关系","guānxi","relationship",3],
+["关心","guānxīn","to care about",3],
+["关于","guānyú","about; regarding",3],
+["国家","guójiā","country",3],
+["过去","guòqù","the past",3],
+["还是","háishi","or; still",3],
+["害怕","hàipà","to be afraid",3],
+["黑板","hēibǎn","blackboard",3],
+["后来","hòulái","later; afterwards",3],
+["护照","hùzhào","passport",3],
+["花","huā","flower; to spend",3],
+["画","huà","to draw; painting",3],
+["坏","huài","bad; broken",3],
+["欢迎","huānyíng","to welcome",3],
+["环境","huánjìng","environment",3],
+["换","huàn","to change; to exchange",3],
+["黄河","Huáng Hé","Yellow River",3],
+["回答","huídá","to answer",3],
+["会议","huìyì","meeting",3],
+["或者","huòzhě","or (in statements)",3],
+["几乎","jīhū","almost",3],
+["机会","jīhuì","opportunity",3],
+["极","jí","extremely",3],
+["记得","jìde","to remember",3],
+["季节","jìjié","season",3],
+["检查","jiǎnchá","to check; to examine",3],
+["简单","jiǎndān","simple",3],
+["见面","jiànmiàn","to meet",3],
+["健康","jiànkāng","healthy; health",3],
+["讲","jiǎng","to speak; to explain",3],
+["教","jiāo","to teach",3],
+["角","jiǎo","corner; 1/10 yuan",3],
+["脚","jiǎo","foot",3],
+["接","jiē","to pick up; to receive",3],
+["街道","jiēdào","street",3],
+["节目","jiémù","program; show",3],
+["节日","jiérì","festival; holiday",3],
+["结婚","jiéhūn","to get married",3],
+["结束","jiéshù","to end; to finish",3],
+["解决","jiějué","to solve",3],
+["借","jiè","to borrow; to lend",3],
+["经常","jīngcháng","often",3],
+["经过","jīngguò","to pass; through",3],
+["经理","jīnglǐ","manager",3],
+["久","jiǔ","long (time)",3],
+["旧","jiù","old (things)",3],
+["句子","jùzi","sentence",3],
+["决定","juédìng","to decide",3],
+["可爱","kě'ài","cute",3],
+["渴","kě","thirsty",3],
+["刻","kè","quarter (of an hour)",3],
+["客人","kèrén","guest",3],
+["空调","kōngtiáo","air conditioner",3],
+["口","kǒu","mouth; measure word for people",3],
+["哭","kū","to cry",3],
+["裤子","kùzi","pants; trousers",3],
+["筷子","kuàizi","chopsticks",3],
+["蓝","lán","blue",3],
+["老","lǎo","old (people)",3],
+["离开","líkāi","to leave",3],
+["礼物","lǐwù","gift; present",3],
+["历史","lìshǐ","history",3],
+["脸","liǎn","face",3],
+["练习","liànxí","to practice; exercise",3],
+["辆","liàng","measure word for vehicles",3],
+["聊天","liáotiān","to chat",3],
+["了解","liǎojiě","to understand; to know about",3],
+["邻居","línjū","neighbor",3],
+["留学","liúxué","to study abroad",3],
+["楼","lóu","building; floor",3],
+["绿","lǜ","green",3],
+["马","mǎ","horse",3],
+["马上","mǎshàng","right away",3],
+["满意","mǎnyì","satisfied",3],
+["帽子","màozi","hat",3],
+["米","mǐ","meter; rice",3],
+["面包","miànbāo","bread",3],
+["明白","míngbai","to understand; clear",3],
+["拿","ná","to take; to hold",3],
+["奶奶","nǎinai","grandmother (paternal)",3],
+["南","nán","south",3],
+["难","nán","difficult",3],
+["难过","nánguò","sad",3],
+["年级","niánjí","grade (in school)",3],
+["年轻","niánqīng","young",3],
+["鸟","niǎo","bird",3],
+["努力","nǔlì","to work hard",3],
+["爬山","páshān","to climb a mountain",3],
+["盘子","pánzi","plate",3],
+["胖","pàng","fat",3],
+["皮鞋","píxié","leather shoes",3],
+["啤酒","píjiǔ","beer",3],
+["瓶子","píngzi","bottle",3],
+["其实","qíshí","actually",3],
+["其他","qítā","other",3],
+["奇怪","qíguài","strange",3],
+["骑","qí","to ride (bike/horse)",3],
+["起飞","qǐfēi","to take off (plane)",3],
+["起来","qǐlai","to get up; upward",3],
+["清楚","qīngchu","clear",3],
+["请假","qǐngjià","to ask for leave",3],
+["秋","qiū","autumn",3],
+["裙子","qúnzi","skirt",3],
+["然后","ránhòu","then; afterwards",3],
+["热情","rèqíng","warm; enthusiastic",3],
+["认为","rènwéi","to think; to believe",3],
+["认真","rènzhēn","serious; earnest",3],
+["容易","róngyì","easy",3],
+["如果","rúguǒ","if",3],
+["伞","sǎn","umbrella",3],
+["上网","shàngwǎng","to go online",3],
+["生气","shēngqì","angry",3],
+["声音","shēngyīn","sound; voice",3],
+["世界","shìjiè","world",3],
+["试","shì","to try",3],
+["瘦","shòu","thin; skinny",3],
+["叔叔","shūshu","uncle",3],
+["舒服","shūfu","comfortable",3],
+["树","shù","tree",3],
+["数学","shùxué","mathematics",3],
+["刷牙","shuāyá","to brush teeth",3],
+["双","shuāng","pair",3],
+["水平","shuǐpíng","level; standard",3],
+["司机","sījī","driver",3],
+["太阳","tàiyáng","sun",3],
+["特别","tèbié","especially; special",3],
+["疼","téng","to hurt; painful",3],
+["提高","tígāo","to improve; to raise",3],
+["体育","tǐyù","physical education; sports",3],
+["甜","tián","sweet",3],
+["条","tiáo","measure word for long thin things",3],
+["同事","tóngshì","colleague",3],
+["同意","tóngyì","to agree",3],
+["头发","tóufa","hair",3],
+["突然","tūrán","suddenly",3],
+["图书馆","túshūguǎn","library",3],
+["腿","tuǐ","leg",3],
+["完成","wánchéng","to complete",3],
+["碗","wǎn","bowl",3],
+["万","wàn","ten thousand",3],
+["忘记","wàngjì","to forget",3],
+["为","wèi","for; because of",3],
+["为了","wèile","in order to",3],
+["位","wèi","polite measure word for people",3],
+["文化","wénhuà","culture",3],
+["西","xī","west",3],
+["习惯","xíguàn","habit; to be used to",3],
+["洗手间","xǐshǒujiān","restroom",3],
+["洗澡","xǐzǎo","to take a shower",3],
+["夏","xià","summer",3],
+["先","xiān","first; before",3],
+["相信","xiāngxìn","to believe",3],
+["香蕉","xiāngjiāo","banana",3],
+["向","xiàng","toward",3],
+["像","xiàng","to be like; to resemble",3],
+["小心","xiǎoxīn","to be careful",3],
+["校长","xiàozhǎng","principal; headmaster",3],
+["新闻","xīnwén","news",3],
+["新鲜","xīnxiān","fresh",3],
+["信用卡","xìnyòngkǎ","credit card",3],
+["行李箱","xínglixiāng","suitcase",3],
+["熊猫","xióngmāo","panda",3],
+["需要","xūyào","to need",3],
+["选择","xuǎnzé","to choose",3],
+["眼镜","yǎnjìng","glasses",3],
+["要求","yāoqiú","to require; requirement",3],
+["爷爷","yéye","grandfather (paternal)",3],
+["一般","yìbān","generally; ordinary",3],
+["一边","yìbiān","while; at the same time",3],
+["一定","yídìng","definitely; certain",3],
+["一共","yígòng","altogether",3],
+["一会儿","yíhuìr","a little while",3],
+["一样","yíyàng","the same",3],
+["一直","yìzhí","always; straight",3],
+["以前","yǐqián","before; in the past",3],
+["音乐","yīnyuè","music",3],
+["银行","yínháng","bank",3],
+["饮料","yǐnliào","beverage; drink",3],
+["应该","yīnggāi","should",3],
+["影响","yǐngxiǎng","to influence; influence",3],
+["用","yòng","to use",3],
+["游戏","yóuxì","game",3],
+["有名","yǒumíng","famous",3],
+["又","yòu","again; also",3],
+["遇到","yùdào","to encounter; to run into",3],
+["元","yuán","yuan (currency)",3],
+["愿意","yuànyì","to be willing",3],
+["月亮","yuèliang","moon",3],
+["越","yuè","the more...",3],
+["站","zhàn","station; to stand",3],
+["张","zhāng","measure word for flat objects",3],
+["着急","zháojí","anxious; worried",3],
+["照顾","zhàogù","to take care of",3],
+["照片","zhàopiàn","photo",3],
+["照相机","zhàoxiàngjī","camera",3],
+["只","zhǐ","only",3],
+["中间","zhōngjiān","middle",3],
+["中文","Zhōngwén","Chinese (language)",3],
+["终于","zhōngyú","finally",3],
+["种","zhǒng","kind; type",3],
+["重要","zhòngyào","important",3],
+["周末","zhōumò","weekend",3],
+["主要","zhǔyào","main; major",3],
+["注意","zhùyì","to pay attention",3],
+["自己","zìjǐ","oneself",3],
+["自行车","zìxíngchē","bicycle",3],
+["总是","zǒngshì","always",3],
+["嘴","zuǐ","mouth",3],
+["最后","zuìhòu","finally; the last",3],
+["最近","zuìjìn","recently",3],
+["作业","zuòyè","homework",3],
+["才","cái","only then; not until",3],
+["而且","érqiě","moreover; and also",3],
+["词典","cídiǎn","dictionary",3],
+["以后","yǐhòu","after; later",3],
+["越来越","yuèláiyuè","more and more",3],
+/* ---------- HSK 4 ---------- */
+["爱情","ài qíng","romance",4],
+["安排","ān pái","to arrange; to plan",4],
+["安全","ān quán","safe; safety",4],
+["按时","àn shí","on time; before deadline",4],
+["按照","àn zhào","according to; in accordance with",4],
+["暗","àn","dark",4],
+["包括","bāo kuò","to comprise; to include",4],
+["保护","bǎo hù","to protect; to defend",4],
+["保证","bǎo zhèng","guarantee; to guarantee",4],
+["报道","bào dào","to report; report",4],
+["报名","bào míng","to sign up; to enter one's name",4],
+["抱","bào","to hold; to carry",4],
+["抱歉","bào qiàn","to be sorry; to feel apologetic",4],
+["倍","bèi","-fold; times",4],
+["本来","běn lái","original; originally",4],
+["笨","bèn","stupid; foolish",4],
+["毕业","bì yè","graduation; to graduate",4],
+["遍","biàn","(measure word: a time, once through, start to finish)",4],
+["标准","biāo zhǔn","standard; standard",4],
+["表达","biǎo dá","to express",4],
+["表格","biǎo gé","form; table",4],
+["表扬","biǎo yáng","to praise; to commend",4],
+["饼干","bǐng gān","biscuit",4],
+["并且","bìng qiě","and; besides",4],
+["博士","bó shì","doctor; court academician",4],
+["不得不","bù dé bù","have no choice or option but to; cannot but",4],
+["不管","bù guǎn","not to be concerned; regardless of",4],
+["不过","bù guò","only; merely",4],
+["不仅","bù jǐn","not just; not only",4],
+["部分","bù fen","part; share",4],
+["擦","cā","to rub; to towel",4],
+["猜","cāi","to guess",4],
+["材料","cái liào","material; data",4],
+["参观","cān guān","to look around; to tour",4],
+["差不多","chà bu duō","almost; nearly",4],
+["尝","cháng","to taste; to experience",4],
+["场","cháng","threshing floor; classifier for events and happenings:",4],
+["超过","chāo guò","to surpass; to exceed",4],
+["吵","chǎo","to quarrel; to make a noise",4],
+["成功","Chéng gōng","Chenggong or Chengkung town in Taitung",4],
+["成熟","chéng shú","mature; to mature",4],
+["成为","chéng wéi","to become",4],
+["诚实","chéng shí","honest",4],
+["乘坐","chéng zuò","to ride",4],
+["吃惊","chī jīng","to be startled; to be shocked",4],
+["抽烟","chōu yān","to smoke",4],
+["出差","chū chāi","to go on an official or business trip",4],
+["出发","chū fā","to set off; to start",4],
+["出生","chū shēng","to be born",4],
+["传真","chuán zhēn","fax; facsimile",4],
+["窗户","chuāng hu","window",4],
+["从来","cóng lái","always; at all times",4],
+["粗心","cū xīn","careless; thoughtless",4],
+["答案","dá àn","answer; solution",4],
+["打扮","dǎ ban","to decorate; to dress",4],
+["打扰","dǎ rǎo","to disturb; to bother",4],
+["打印","dǎ yìn","to affix a seal; to stamp",4],
+["打折","dǎ zhé","to give a discount",4],
+["打针","dǎ zhēn","to give or have an injection",4],
+["大夫","dà fū","senior official",4],
+["大概","dà gài","roughly; probably",4],
+["大使馆","dà shǐ guǎn","embassy",4],
+["大约","dà yuē","approximately; probably",4],
+["代表","dài biǎo","representative; delegate",4],
+["代替","dài tì","to replace; to take the place of",4],
+["戴","dài","to wear (glasses, hat, gloves, etc.)",4],
+["弹","dàn","crossball; bullet",4],
+["当","dāng","dong; ding dong",4],
+["当地","dāng dì","local",4],
+["当时","dāng shí","then; at that time",4],
+["刀","dāo","knife; blade",4],
+["导游","dǎo yóu","tour guide; guidebook",4],
+["到处","dào chù","everywhere",4],
+["到底","dào dǐ","finally; in the end",4],
+["道歉","dào qiàn","to apologize",4],
+["地球","dì qiú","the earth",4],
+["地址","dì zhǐ","address",4],
+["得意","dé yì","proud of oneself; pleased with oneself",4],
+["底","de","(equivalent to 的 as possessive particle)",4],
+["调查","diào chá","investigation; inquiry",4],
+["掉","diào","to fall; to drop",4],
+["丢","diū","to lose; to put aside",4],
+["动作","dòng zuò","movement; to act",4],
+["堵车","dǔ chē","traffic jam; to get congested",4],
+["肚子","dù zi","belly; abdomen",4],
+["断","duàn","to break; to snap",4],
+["对话","duì huà","to talk; dialogue",4],
+["对面","duì miàn","opposite; across",4],
+["顿","dùn","to stop; to pause",4],
+["朵","duǒ","flower; earlobe",4],
+["儿童","ér tóng","child",4],
+["而","ér","and; as well as",4],
+["发生","fā shēng","to happen",4],
+["发展","fā zhǎn","development; growth",4],
+["法律","fǎ lǜ","law",4],
+["翻译","fān yì","to translate; to interpret",4],
+["烦恼","fán nǎo","to be worried; to be distressed",4],
+["反对","fǎn duì","to oppose",4],
+["反映","fǎn yìng","to mirror; to reflect",4],
+["范围","fàn wéi","range; scope",4],
+["方法","fāng fǎ","method; way",4],
+["方面","fāng miàn","respect; aspect",4],
+["方向","fāng xiàng","direction",4],
+["访问","fǎng wèn","to visit; to call on",4],
+["放弃","fàng qì","to renounce",4],
+["放暑假","fàng shǔ jià","to be on summer vacation",4],
+["分之","fēn zhī","(indicating a fraction)",4],
+["份","fèn","(measure word for copies, gifts, newspapers)",4],
+["丰富","fēng fù","to enrich; rich",4],
+["风景","fēng jǐng","scenery",4],
+["否则","fǒu zé","otherwise",4],
+["符合","fú hé","in keeping with; in accordance with",4],
+["父亲","fù qīn","father; also pr. [fù qin]",4],
+["负责","fù zé","to be in charge of; to take responsibility for",4],
+["复印","fù yìn","to photocopy; to duplicate a document",4],
+["复杂","fù zá","complicated",4],
+["富","fù","rich; abundant",4],
+["改变","gǎi biàn","to change; to alter",4],
+["感动","gǎn dòng","to move; to touch",4],
+["感觉","gǎn jué","feeling; to feel",4],
+["感情","gǎn qíng","emotion; sentiment",4],
+["感谢","gǎn xiè","thanks; gratitude",4],
+["干","gàn","to do; to be engaged in (work)",4],
+["干杯","gān bēi","to drink a toast; Cheers!",4],
+["干燥","gān zào","to dry; desiccation",4],
+["刚刚","gāng gang","just recently; just a moment ago",4],
+["高级","gāo jí","high level; high grade",4],
+["各","gè","each; every",4],
+["工具","gōng jù","tool; instrument",4],
+["工资","gōng zī","wages",4],
+["公里","gōng lǐ","kilometer",4],
+["共同","gòng tóng","common; joint",4],
+["购物","gòu wù","shopping",4],
+["够","gòu","enough; enough",4],
+["估计","gū jì","to estimate; to reckon",4],
+["孤单","gū dān","lone; lonely",4],
+["鼓励","gǔ lì","to encourage",4],
+["鼓掌","gǔ zhǎng","to applaud; to clap",4],
+["故意","gù yì","deliberately",4],
+["顾客","gù kè","customer",4],
+["挂","guà","to hang or suspend; to hang up",4],
+["关键","guān jiàn","crucial point; crux",4],
+["观众","guān zhòng","spectators; audience",4],
+["管理","guǎn lǐ","to supervise; to manage",4],
+["光","guāng","light; bright",4],
+["广播","guǎng bō","broadcast; broadcasting",4],
+["广告","guǎng gào","to advertise; a commercial",4],
+["逛","guàng","to stroll; to visit",4],
+["规定","guī dìng","to stipulate; regulations",4],
+["国际","guó jì","international",4],
+["果然","guǒ rán","really; sure enough",4],
+["过程","guò chéng","course of events; process",4],
+["咳嗽","ké sou","to cough",4],
+["海洋","hǎi yáng","ocean",4],
+["害羞","hài xiū","shy; embarrassed",4],
+["寒假","hán jià","winter vacation",4],
+["汗","hán","see 汗, 汗国",4],
+["航班","háng bān","flight",4],
+["好处","hǎo chǔ","easy to get along with",4],
+["好像","hǎo xiàng","as if; to seem like",4],
+["号码","hào mǎ","number",4],
+["合格","hé gé","to meet the standard required; qualified",4],
+["合适","hé shì","suitable; fitting",4],
+["盒子","hé zi","box; case",4],
+["猴子","hóu zi","monkey",4],
+["后悔","hòu huǐ","to regret",4],
+["厚","hòu","thick; deep or profound",4],
+["忽然","hū rán","suddenly",4],
+["互相","hù xiāng","each other; mutually",4],
+["护士","hù shi","nurse",4],
+["怀疑","huái yí","to doubt; to be skeptical of",4],
+["回忆","huí yì","to recall; memories",4],
+["活动","huó dòng","to exercise; to move about",4],
+["活泼","huó po","lively; vivacious",4],
+["火","huǒ","fire",4],
+["获得","huò dé","to obtain",4],
+["积极","jī jí","active; energetic",4],
+["积累","jī lěi","to accumulate; accumulation",4],
+["基础","jī chǔ","base; basic",4],
+["激动","jī dòng","to move emotionally; to stir up",4],
+["及时","jí shí","timely; promptly",4],
+["即使","jí shǐ","even if",4],
+["极其","jí qí","extremely",4],
+["集合","jí hé","to gather; set",4],
+["计划","jì huà","plan; project",4],
+["记者","jì zhě","reporter",4],
+["技术","jì shù","technology",4],
+["既然","jì rán","since; as",4],
+["继续","jì xù","to continue; to proceed with",4],
+["寄","jì","to send; to mail",4],
+["加班","jiā bān","to work overtime",4],
+["加油站","jiā yóu zhàn","gas station",4],
+["家具","jiā jù","furniture",4],
+["假","jiǎ","fake; false",4],
+["价格","jià gé","price",4],
+["坚持","jiān chí","to persevere with; to persist in",4],
+["减肥","jiǎn féi","to lose weight",4],
+["减少","jiǎn shǎo","to lessen",4],
+["将来","jiāng lái","in the future; future",4],
+["奖金","jiǎng jīn","premium; award money",4],
+["降低","jiàng dī","to reduce",4],
+["交","jiāo","to hand over; to deliver",4],
+["交流","jiāo liú","to exchange; exchange",4],
+["交通","jiāo tōng","to be connected; traffic",4],
+["骄傲","jiāo ào","pride; arrogance",4],
+["饺子","jiǎo zi","dumpling; pot-sticker",4],
+["教授","jiào shòu","professor; to instruct",4],
+["教育","jiào yù","to educate; to teach",4],
+["接受","jiē shòu","to accept; to receive",4],
+["节约","jié yuē","to economize; to conserve",4],
+["结果","jiē guǒ","to bear fruit",4],
+["解释","jiě shì","explanation; to explain",4],
+["尽管","jǐn guǎn","despite; although",4],
+["紧张","jǐn zhāng","nervous; keyed up",4],
+["进行","jìn xíng","to advance; to conduct",4],
+["禁止","jìn zhǐ","to prohibit; to forbid",4],
+["京剧","Jīng jù","Beijing opera",4],
+["经济","jīng jì","economy; economic",4],
+["经历","jīng lì","experience; to experience",4],
+["经验","jīng yàn","experience; to experience",4],
+["精彩","jīng cǎi","wonderful; marvelous",4],
+["精神","jīng shén","spirit; mind",4],
+["警察","jǐng chá","police",4],
+["竞争","jìng zhēng","to compete; competition",4],
+["竟然","jìng rán","unexpectedly; to one's surprise",4],
+["镜子","jìng zi","mirror",4],
+["究竟","jiū jìng","to go to the bottom of a matter; after all",4],
+["举办","jǔ bàn","to conduct; to hold",4],
+["拒绝","jù jué","to refuse",4],
+["距离","jù lí","distance; to be apart from",4],
+["开玩笑","kāi wán xiào","to play a joke; to make fun of",4],
+["看法","kàn fǎ","way of looking at a thing; view",4],
+["考虑","kǎo lǜ","to think over; to consider",4],
+["科学","kē xué","science; scientific knowledge",4],
+["棵","kē","classifier for trees, cabbages, plants etc",4],
+["可怜","kě lián","pitiful; pathetic",4],
+["可是","kě shì","but; indeed",4],
+["可惜","kě xī","it is a pity; what a pity",4],
+["肯定","kěn dìng","to be certain; to be positive",4],
+["空气","kōng qì","air; atmosphere",4],
+["恐怕","kǒng pà","fear; to dread",4],
+["苦","kǔ","bitter; hardship",4],
+["宽","kuān","wide; broad",4],
+["困","kùn","to trap; to surround",4],
+["困难","kùn nan","difficult; challenging",4],
+["扩大","kuò dà","to expand; to enlarge",4],
+["垃圾桶","lā jī tǒng","rubbish bin; trash can",4],
+["拉","lā","to pull; to play",4],
+["辣","là","spicy; hot",4],
+["来不及","lái bu jí","there's not enough time; it's too late",4],
+["来得及","lái de jí","to have enough time",4],
+["懒","lǎn","lazy",4],
+["浪费","làng fèi","to waste; to squander",4],
+["浪漫","làng màn","romantic",4],
+["老虎","lǎo hǔ","tiger",4],
+["冷静","lěng jìng","calm; deserted",4],
+["礼貌","lǐ mào","courtesy; courteous",4],
+["理发","lǐ fà","to get a haircut; to cut hair",4],
+["理解","lǐ jiě","to comprehend",4],
+["理想","lǐ xiǎng","an ideal; a dream",4],
+["力气","lì qi","strength",4],
+["厉害","lì hai","terrible; intense",4],
+["例如","lì rú","for example",4],
+["俩","liǎ","two; both",4],
+["连","lián","even (emphasizing inclusion); to link",4],
+["联系","liánxì","to contact; connection",4],
+["凉快","liáng kuai","nice and cold; pleasantly cool",4],
+["亮","liàng","bright; clear",4],
+["另外","lìng wài","additional; in addition",4],
+["流泪","liú lèi","to shed tears",4],
+["流利","liú lì","fluent",4],
+["流行","liú xíng","to spread; to propagate",4],
+["留","liú","to leave (behind); to stay; to keep",4],
+["律师","lǜ shī","lawyer",4],
+["乱","luàn","in confusion or disorder; in a confused state of mind",4],
+["麻烦","má fan","trouble; inconvenient",4],
+["马虎","mǎ hu","careless; sloppy",4],
+["满","Mǎn","Manchu ethnic group",4],
+["毛巾","máo jīn","towel",4],
+["美丽","měi lì","beautiful",4],
+["梦","mèng","dream; to dream",4],
+["密码","mì mǎ","cipher; password",4],
+["免费","miǎn fèi","free",4],
+["民族","mín zú","nationality",4],
+["母亲","mǔ qīn","mother; also pr. [mǔ qin]",4],
+["目的","mù dì","purpose",4],
+["耐心","nài xīn","to be patient; patience",4],
+["难道","nán dào","don't tell me ...; could it be that...?",4],
+["难受","nán shòu","to feel unwell; to suffer pain",4],
+["内","nèi","inside; inner",4],
+["内容","nèi róng","content; substance",4],
+["能力","néng lì","capability; ability",4],
+["年龄","nián líng","age",4],
+["农村","nóng cūn","rural area; village",4],
+["弄","lòng","lane; alley",4],
+["暖和","nuǎn huo","warm; nice and warm",4],
+["偶尔","ǒu ěr","occasionally; once in a while",4],
+["排列","pái liè","to arrange in order; permutation",4],
+["判断","pàn duàn","to judge; to determine",4],
+["陪","péi","to accompany; to keep sb company",4],
+["批评","pī píng","to criticize",4],
+["皮肤","pí fū","skin",4],
+["脾气","pí qi","character; temperament",4],
+["篇","piān","sheet; piece of writing",4],
+["骗","piàn","to cheat; to swindle",4],
+["乒乓球","pīng pāng qiú","table tennis; ping-pong",4],
+["平时","píng shí","ordinarily; in normal times",4],
+["破","pò","broken; damaged",4],
+["普遍","pǔ biàn","universal; general",4],
+["其次","qí cì","next; secondly",4],
+["其中","qí zhōng","among; in",4],
+["气候","qì hòu","climate; climate",4],
+["千万","qiān wàn","ten million; countless",4],
+["签证","qiān zhèng","visa; to issue a visa",4],
+["墙","qiáng","wall",4],
+["敲","qiāo","to hit; to strike",4],
+["桥","qiáo","bridge",4],
+["巧克力","qiǎo kè lì","chocolate",4],
+["亲戚","qīn qi","a relative",4],
+["轻","qīng","light; easy",4],
+["轻松","qīng sōng","light; gentle",4],
+["情况","qíng kuàng","circumstances",4],
+["请客","qǐng kè","to give a dinner party; to entertain guests",4],
+["穷","qióng","poor; destitute",4],
+["区别","qū bié","difference; to distinguish",4],
+["取","qǔ","to take; to get",4],
+["全部","quán bù","whole",4],
+["缺点","quē diǎn","weak point; fault",4],
+["缺少","quē shǎo","lack; shortage of",4],
+["却","què","but; yet; however",4],
+["确实","què shí","indeed; really",4],
+["群","qún","(measure word for a group/crowd); group",4],
+["然而","rán ér","however",4],
+["热闹","rè nao","bustling with noise and excitement; lively",4],
+["人民币","rén mín bì","Renminbi; Chinese Yuan",4],
+["任何","rèn hé","any; whatever",4],
+["任务","rèn wu","mission",4],
+["扔","rēng","to throw; to throw away",4],
+["仍然","réng rán","still",4],
+["日记","rì jì","diary",4],
+["入口","rù kǒu","entrance; to import",4],
+["软","ruǎn","soft; flexible",4],
+["散步","sàn bù","to take a walk",4],
+["森林","sēn lín","forest",4],
+["沙发","shā fā","sofa; the first reply or replier to a forum post",4],
+["伤心","shāng xīn","to grieve; to be broken-hearted",4],
+["商量","shāng liang","to consult; to talk over",4],
+["稍微","shāo wēi","a little bit",4],
+["社会","shè huì","society",4],
+["申请","shēn qǐng","to apply for sth; application form",4],
+["深","shēn","deep",4],
+["甚至","shèn zhì","even",4],
+["生活","shēng huó","to live; life",4],
+["生命","shēng mìng","life; living being",4],
+["省","shěng","to save; to omit",4],
+["剩","shèng","to remain; to be left",4],
+["失败","shī bài","to be defeated; to lose",4],
+["失望","shī wàng","disappointed; to lose hope",4],
+["师傅","shī fu","master; qualified worker",4],
+["狮子","Shī zǐ","Leo; Shihtzu township in Pingtung County 屏东县,",4],
+["湿润","shī rùn","moist",4],
+["十分","shí fēn","very; completely",4],
+["实际","shí jì","reality; practice",4],
+["实在","shí zài","really; actually",4],
+["食品","shí pǐn","foodstuff",4],
+["使用","shǐ yòng","to use; to employ",4],
+["世纪","shì jì","century",4],
+["市场","shì chǎng","marketplace; market",4],
+["适合","shì hé","to fit",4],
+["适应","shì yìng","to adapt; to fit",4],
+["收","shōu","to receive; to accept",4],
+["收入","shōu rù","to take in; income",4],
+["收拾","shōu shi","to put in order; to tidy up",4],
+["首都","shǒu dū","capital",4],
+["首先","shǒu xiān","first; in the first place",4],
+["受不了","shòu bù liǎo","unbearable; unable to endure",4],
+["受到","shòu dào","to receive; to be ...ed",4],
+["售货员","shòu huò yuán","salesperson",4],
+["输","shū","to lose; to transport",4],
+["熟悉","shú xī","to be familiar with",4],
+["数量","shù liàng","amount; quantity",4],
+["数字","shù zì","numeral; digit",4],
+["帅","shuài","handsome",4],
+["顺便","shùn biàn","conveniently; in passing",4],
+["顺利","shùn lì","smoothly",4],
+["顺序","shùn xù","sequence; order",4],
+["说明","shuō míng","to explain; to illustrate",4],
+["硕士","shuò shì","master's degree; person who has a master's degree",4],
+["死","sǐ","to die; impassable",4],
+["速度","sù dù","speed; rate",4],
+["塑料袋","sù liào dài","plastic bag",4],
+["酸","suān","sour; tart",4],
+["算","suàn","to regard as; to figure",4],
+["随便","suí biàn","as one wishes; as one pleases",4],
+["随着","suí zhe","along with; in the wake of",4],
+["孙子","Sūn zǐ","Sun Tzu, also known as Sun Wu 孙武 ,",4],
+["所有","suǒ yǒu","all; to have",4],
+["台","tái","(measure word for machines, appliances, shows); platform",4],
+["抬","tái","to lift; to raise",4],
+["态度","tài du","manner; bearing",4],
+["谈","tán","to talk; to discuss",4],
+["汤","tāng","soup",4],
+["躺","tǎng","to recline; to lie down",4],
+["趟","tàng","(measure word for trips, runs)",4],
+["讨论","tǎo lùn","to discuss",4],
+["讨厌","tǎo yàn","to dislike; to loathe",4],
+["特点","tè diǎn","characteristic; trait",4],
+["提供","tí gōng","to offer; to supply",4],
+["提前","tí qián","to shift to an earlier date; to do sth ahead of time",4],
+["提醒","tí xǐng","to remind; to call attention to",4],
+["填空","tián kòng","to fill a job vacancy; to fill in a blank",4],
+["条件","tiáo jiàn","condition; requirement",4],
+["停止","tíng zhǐ","to stop",4],
+["挺","tǐng","straight; erect",4],
+["通过","tōng guò","to pass through; to adopt",4],
+["通知","tōng zhī","to notify; to inform",4],
+["同情","tóng qíng","to sympathize with; sympathy",4],
+["推","tuī","to push; to cut",4],
+["推迟","tuī chí","to postpone; to put off",4],
+["脱","tuō","to shed; to take off",4],
+["袜子","wà zi","socks; stockings",4],
+["完全","wán quán","complete; totally",4],
+["网球","wǎng qiú","tennis; tennis ball",4],
+["网站","wǎng zhàn","website; network station",4],
+["往往","wǎng wǎng","usually; in many cases",4],
+["危险","wēi xiǎn","danger; dangerous",4],
+["味道","wèi dao","flavor; feeling",4],
+["温度","wēn dù","temperature",4],
+["文章","wén zhāng","article; essay",4],
+["握手","wò shǒu","to shake hands",4],
+["污染","wū rǎn","to pollute",4],
+["无","wú","not to have; no",4],
+["无聊","wú liáo","bored; boring",4],
+["无论","wú lùn","no matter what or how; regardless of whether...",4],
+["误会","wù huì","to misunderstand; to mistake",4],
+["吸引","xī yǐn","to attract",4],
+["洗衣机","xǐ yī jī","washing machine",4],
+["西红柿","xī hóng shì","tomato",4],
+["咸","xián","salty",4],
+["现代","Xiàn dài","Hyundai, South Korean company",4],
+["限制","xiàn zhì","to restrict; to limit",4],
+["羡慕","xiàn mù","to envy; to admire",4],
+["相反","xiāng fǎn","opposite; contrary",4],
+["香","xiāng","fragrant; sweet smelling",4],
+["详细","xiáng xì","detailed; in detail",4],
+["响","xiǎng","echo; sound",4],
+["消息","xiāo xi","news; information",4],
+["小说","xiǎo shuō","novel; fiction",4],
+["效果","xiào guǒ","result; effect",4],
+["笑话","xiào hua","joke; to laugh at",4],
+["心情","xīn qíng","mood",4],
+["辛苦","xīn kǔ","exhausting; hard",4],
+["信任","xìn rèn","to trust; to have confidence in",4],
+["信心","xìn xīn","confidence; faith",4],
+["行","háng","row; line",4],
+["醒","xǐng","to wake up; to be awake",4],
+["兴奋","xīng fèn","excited; excitement",4],
+["幸福","xìng fú","happiness; happy",4],
+["性别","xìng bié","gender; sex",4],
+["性格","xìng gé","nature; disposition",4],
+["修","xiū","to repair; to fix",4],
+["许多","xǔ duō","many; a lot of",4],
+["血","xuè","blood; colloquial pr. [xiě]",4],
+["压力","yā lì","pressure",4],
+["牙膏","yá gāo","toothpaste",4],
+["亚洲","Yà zhōu","Asia",4],
+["呀","ya","(particle equivalent to 啊 after a vowel, expressin",4],
+["严格","yán gé","strict; stringent",4],
+["严重","yán zhòng","grave; serious",4],
+["研究生","yán jiū shēng","graduate student; postgraduate student",4],
+["盐","yán","salt",4],
+["演出","yǎn chū","to act; to perform",4],
+["演员","yǎn yuán","actor or actress; performer",4],
+["阳光","yáng guāng","sunshine; upbeat",4],
+["养成","yǎng chéng","to cultivate; to raise",4],
+["样子","yàng zi","appearance; manner",4],
+["邀请","yāo qǐng","to invite; invitation",4],
+["钥匙","yào shi","key",4],
+["也许","yě xǔ","perhaps; maybe",4],
+["叶子","yè zi","leaf; marijuana",4],
+["页","xié","head",4],
+["一切","yī qiè","everything; every",4],
+["以","yǐ","with; by means of; in order to",4],
+["亿","yì","100 million",4],
+["艺术","yì shù","art",4],
+["意见","yì jiàn","idea; opinion",4],
+["因此","yīn cǐ","thus",4],
+["引起","yǐn qǐ","to give rise to",4],
+["印象","yìn xiàng","impression; a memory",4],
+["赢","yíng","to beat; to win",4],
+["硬","yìng","hard; strong",4],
+["永远","yǒng yuǎn","forever; eternal",4],
+["勇敢","yǒng gǎn","brave",4],
+["优点","yōu diǎn","merit; benefit",4],
+["优秀","yōu xiù","outstanding",4],
+["幽默","yōu mò","humor; humorous",4],
+["尤其","yóu qí","especially",4],
+["由","yóu","to follow; from",4],
+["由于","yóu yú","due to; as a result of",4],
+["有趣","yǒu qù","interesting; fascinating",4],
+["友好","Yǒu hǎo","Youhao district of Yichun city 市,",4],
+["友谊","yǒu yì","companionship; fellowship",4],
+["于是","yú shì","thereupon",4],
+["愉快","yú kuài","cheerful; cheerily",4],
+["与","yǔ","and; with; to give",4],
+["羽毛球","yǔ máo qiú","shuttlecock; badminton",4],
+["语法","yǔ fǎ","grammar",4],
+["语言","yǔ yán","language",4],
+["预习","yù xí","to prepare a lesson",4],
+["原来","yuán lái","original; former",4],
+["原谅","yuán liàng","to excuse; to forgive",4],
+["原因","yuán yīn","cause; origin",4],
+["圆","yuán","circle; round",4],
+["约会","yuē huì","appointment; engagement",4],
+["阅读","yuè dú","to read; reading",4],
+["允许","yǔn xǔ","to permit; to allow",4],
+["杂志","zá zhì","magazine",4],
+["咱们","zán men","we or us spoken to); I or me",4],
+["暂时","zàn shí","temporary; provisional",4],
+["脏","zàng","viscera; organ",4],
+["责任","zé rèn","responsibility; blame",4],
+["增加","zēng jiā","to raise; to increase",4],
+["增长","zēng zhǎng","to grow; to increase",4],
+["窄","zhǎi","narrow; narrow-minded",4],
+["长城","Cháng chéng","the Great Wall",4],
+["长江","Cháng Jiāng","Yangtze River, or Chang Jiang",4],
+["招聘","zhāo pìn","to invite applications for a job; to recruit",4],
+["著名","zhù míng","famous; noted",4],
+["真正","zhēn zhèng","genuine; really",4],
+["整理","zhěng lǐ","to arrange; to tidy up",4],
+["整齐","zhěng qí","orderly; neat",4],
+["正常","zhèng cháng","regular; normal",4],
+["正好","zhèng hǎo","just; just right",4],
+["正确","zhèng què","correct",4],
+["正式","zhèng shì","formal",4],
+["证明","zhèng míng","proof; certificate",4],
+["之","zhī","him; her",4],
+["支持","zhī chí","to be in favor of; to support",4],
+["知识","zhī shi","knowledge; intellectual",4],
+["直接","zhí jiē","direct; immediate",4],
+["值得","zhí de","to be worth; to deserve",4],
+["职业","zhí yè","occupation; professional",4],
+["植物","zhí wù","plant; vegetation",4],
+["只好","zhǐ hǎo","to have no other option but to ...",4],
+["只要","zhǐ yào","if only; so long as",4],
+["指","zhǐ","finger; to point at or to",4],
+["至少","zhì shǎo","at least; least",4],
+["制造","zhì zào","to manufacture",4],
+["质量","zhì liàng","quality; mass",4],
+["重点","chóng diǎn","to recount; to re-evaluate",4],
+["重视","zhòng shì","to attach importance to sth",4],
+["重新","chóng xīn","again",4],
+["周围","zhōu wéi","environs",4],
+["猪","zhū","hog; pig",4],
+["逐渐","zhú jiàn","gradually",4],
+["主动","zhǔ dòng","to take the initiative; to do sth of one's own accord",4],
+["主意","zhǔ yi","plan; idea",4],
+["祝贺","zhù hè","to congratulate; congratulations",4],
+["专门","zhuān mén","specialist; specialized",4],
+["专业","zhuān yè","specialty; specialized field",4],
+["赚","zhuàn","to earn; to make a profit",4],
+["撞","zhuàng","to knock against; to bump into",4],
+["准确","zhǔn què","accurate",4],
+["准时","zhǔn shí","on time; punctual",4],
+["仔细","zǐ xì","careful; to be careful",4],
+["自然","zì rán","nature; natural",4],
+["总结","zǒng jié","to sum up; to conclude",4],
+["租","zū","to hire; to rent",4],
+["组成","zǔ chéng","to form; to make up",4],
+["组织","zǔ zhī","to organize; organization",4],
+["最好","zuì hǎo","best; had better",4],
+["尊重","zūn zhòng","to esteem; to respect",4],
+["作者","zuò zhě","author",4],
+["座","zuò","seat; base",4],
+["座位","zuò wèi","seat",4],
+["做生意","zuò shēng yì","to do business",4]
+];
+
+/* ============ EXAMPLE SENTENCES ============ */
+/* EX[hanzi] = [sentence, pinyin, english] */
+const EX={
+"爱":["我爱妈妈。","Wǒ ài māma.","I love my mom."],
+"八":["现在八点。","Xiànzài bā diǎn.","It's eight o'clock now."],
+"爸爸":["爸爸在工作。","Bàba zài gōngzuò.","Dad is working."],
+"杯子":["杯子里有水。","Bēizi lǐ yǒu shuǐ.","There is water in the cup."],
+"北京":["我住在北京。","Wǒ zhù zài Běijīng.","I live in Beijing."],
+"本":["我有三本书。","Wǒ yǒu sān běn shū.","I have three books."],
+"不":["我不喝茶。","Wǒ bù hē chá.","I don't drink tea."],
+"不客气":["“谢谢你！”“不客气。”","\u201cXièxie nǐ!\u201d \u201cBú kèqi.\u201d","\u201cThank you!\u201d \u201cYou're welcome.\u201d"],
+"菜":["这个菜很好吃。","Zhège cài hěn hǎochī.","This dish is delicious."],
+"茶":["请喝茶。","Qǐng hē chá.","Please have some tea."],
+"吃":["我想吃米饭。","Wǒ xiǎng chī mǐfàn.","I want to eat rice."],
+"出租车":["我们坐出租车去。","Wǒmen zuò chūzūchē qù.","We'll go by taxi."],
+"打电话":["我给妈妈打电话。","Wǒ gěi māma dǎ diànhuà.","I call my mom."],
+"大":["这个苹果很大。","Zhège píngguǒ hěn dà.","This apple is big."],
+"的":["这是我的书。","Zhè shì wǒ de shū.","This is my book."],
+"点":["现在几点？","Xiànzài jǐ diǎn?","What time is it now?"],
+"电脑":["我的电脑是新的。","Wǒ de diànnǎo shì xīn de.","My computer is new."],
+"电视":["我们在看电视。","Wǒmen zài kàn diànshì.","We are watching TV."],
+"电影":["这个电影很好看。","Zhège diànyǐng hěn hǎokàn.","This movie is great."],
+"东西":["我要买点儿东西。","Wǒ yào mǎi diǎnr dōngxi.","I want to buy some things."],
+"都":["我们都是学生。","Wǒmen dōu shì xuésheng.","We are all students."],
+"读":["他在读一本书。","Tā zài dú yì běn shū.","He is reading a book."],
+"对不起":["对不起，我来晚了。","Duìbuqǐ, wǒ lái wǎn le.","Sorry, I'm late."],
+"多":["这里人很多。","Zhèlǐ rén hěn duō.","There are many people here."],
+"多少":["这个多少钱？","Zhège duōshao qián?","How much is this?"],
+"儿子":["他儿子五岁了。","Tā érzi wǔ suì le.","His son is five years old."],
+"二":["今天二月二号。","Jīntiān èr yuè èr hào.","Today is February 2nd."],
+"饭店":["我们去饭店吃饭。","Wǒmen qù fàndiàn chīfàn.","Let's go eat at a restaurant."],
+"飞机":["飞机十点起飞。","Fēijī shí diǎn qǐfēi.","The plane takes off at ten."],
+"分钟":["请等五分钟。","Qǐng děng wǔ fēnzhōng.","Please wait five minutes."],
+"高兴":["认识你很高兴。","Rènshi nǐ hěn gāoxìng.","Nice to meet you."],
+"个":["我买了三个苹果。","Wǒ mǎi le sān gè píngguǒ.","I bought three apples."],
+"工作":["他的工作很忙。","Tā de gōngzuò hěn máng.","His job keeps him busy."],
+"狗":["我家有一只小狗。","Wǒ jiā yǒu yì zhī xiǎo gǒu.","My family has a puppy."],
+"汉语":["我在学习汉语。","Wǒ zài xuéxí Hànyǔ.","I am studying Chinese."],
+"好":["今天天气很好。","Jīntiān tiānqì hěn hǎo.","The weather is nice today."],
+"号":["今天几号？","Jīntiān jǐ hào?","What's the date today?"],
+"喝":["我想喝水。","Wǒ xiǎng hē shuǐ.","I want to drink water."],
+"和":["我和朋友去学校。","Wǒ hé péngyou qù xuéxiào.","My friend and I go to school."],
+"很":["她很漂亮。","Tā hěn piàoliang.","She is very pretty."],
+"后面":["学校在商店后面。","Xuéxiào zài shāngdiàn hòumiàn.","The school is behind the store."],
+"回":["我六点回家。","Wǒ liù diǎn huí jiā.","I go home at six."],
+"会":["我会说汉语。","Wǒ huì shuō Hànyǔ.","I can speak Chinese."],
+"几":["你有几本书？","Nǐ yǒu jǐ běn shū?","How many books do you have?"],
+"家":["我家有四口人。","Wǒ jiā yǒu sì kǒu rén.","There are four people in my family."],
+"叫":["我叫王明。","Wǒ jiào Wáng Míng.","My name is Wang Ming."],
+"今天":["今天是星期一。","Jīntiān shì xīngqīyī.","Today is Monday."],
+"九":["我九点睡觉。","Wǒ jiǔ diǎn shuìjiào.","I go to sleep at nine."],
+"开":["请开门。","Qǐng kāi mén.","Please open the door."],
+"看":["我在看书。","Wǒ zài kàn shū.","I am reading a book."],
+"看见":["我看见他了。","Wǒ kànjiàn tā le.","I saw him."],
+"块":["这个五块钱。","Zhège wǔ kuài qián.","This costs five yuan."],
+"来":["请你来我家。","Qǐng nǐ lái wǒ jiā.","Please come to my home."],
+"老师":["王老师教汉语。","Wáng lǎoshī jiāo Hànyǔ.","Teacher Wang teaches Chinese."],
+"了":["我吃饭了。","Wǒ chīfàn le.","I have eaten."],
+"冷":["今天很冷。","Jīntiān hěn lěng.","It's cold today."],
+"里":["猫在家里。","Māo zài jiā lǐ.","The cat is in the house."],
+"六":["我们六点吃饭。","Wǒmen liù diǎn chīfàn.","We eat at six."],
+"妈妈":["妈妈在看电视。","Māma zài kàn diànshì.","Mom is watching TV."],
+"吗":["你是学生吗？","Nǐ shì xuésheng ma?","Are you a student?"],
+"买":["我想买水果。","Wǒ xiǎng mǎi shuǐguǒ.","I want to buy fruit."],
+"猫":["那只猫很小。","Nà zhī māo hěn xiǎo.","That cat is small."],
+"没关系":["“对不起！”“没关系。”","\u201cDuìbuqǐ!\u201d \u201cMéi guānxi.\u201d","\u201cSorry!\u201d \u201cIt's okay.\u201d"],
+"没有":["我没有钱。","Wǒ méiyǒu qián.","I don't have money."],
+"米饭":["我喜欢吃米饭。","Wǒ xǐhuan chī mǐfàn.","I like eating rice."],
+"名字":["你叫什么名字？","Nǐ jiào shénme míngzi?","What's your name?"],
+"明天":["明天见！","Míngtiān jiàn!","See you tomorrow!"],
+"哪":["你是哪国人？","Nǐ shì nǎ guó rén?","Which country are you from?"],
+"哪儿":["你去哪儿？","Nǐ qù nǎr?","Where are you going?"],
+"那":["那是我的老师。","Nà shì wǒ de lǎoshī.","That is my teacher."],
+"呢":["我很好，你呢？","Wǒ hěn hǎo, nǐ ne?","I'm fine, and you?"],
+"能":["你能帮我吗？","Nǐ néng bāng wǒ ma?","Can you help me?"],
+"你":["你好吗？","Nǐ hǎo ma?","How are you?"],
+"年":["我学了两年汉语。","Wǒ xué le liǎng nián Hànyǔ.","I've studied Chinese for two years."],
+"女儿":["她女儿很漂亮。","Tā nǚ'ér hěn piàoliang.","Her daughter is pretty."],
+"朋友":["他是我的好朋友。","Tā shì wǒ de hǎo péngyou.","He is my good friend."],
+"漂亮":["这个杯子真漂亮。","Zhège bēizi zhēn piàoliang.","This cup is really pretty."],
+"苹果":["我吃了一个苹果。","Wǒ chī le yí gè píngguǒ.","I ate an apple."],
+"七":["现在七点半。","Xiànzài qī diǎn bàn.","It's seven thirty."],
+"前面":["前面有一个商店。","Qiánmiàn yǒu yí gè shāngdiàn.","There's a store ahead."],
+"钱":["我没有很多钱。","Wǒ méiyǒu hěn duō qián.","I don't have much money."],
+"请":["请坐。","Qǐng zuò.","Please sit."],
+"去":["我去学校。","Wǒ qù xuéxiào.","I go to school."],
+"热":["今天太热了。","Jīntiān tài rè le.","It's too hot today."],
+"人":["他是好人。","Tā shì hǎo rén.","He is a good person."],
+"认识":["我认识她。","Wǒ rènshi tā.","I know her."],
+"三":["我有三个朋友。","Wǒ yǒu sān gè péngyou.","I have three friends."],
+"商店":["商店九点开门。","Shāngdiàn jiǔ diǎn kāi mén.","The store opens at nine."],
+"上":["书在桌子上。","Shū zài zhuōzi shàng.","The book is on the table."],
+"上午":["我上午有课。","Wǒ shàngwǔ yǒu kè.","I have class in the morning."],
+"少":["这里人很少。","Zhèlǐ rén hěn shǎo.","There are few people here."],
+"谁":["他是谁？","Tā shì shéi?","Who is he?"],
+"什么":["你想吃什么？","Nǐ xiǎng chī shénme?","What do you want to eat?"],
+"十":["现在十点。","Xiànzài shí diǎn.","It's ten o'clock."],
+"时候":["你什么时候回家？","Nǐ shénme shíhou huí jiā?","When do you go home?"],
+"是":["我是学生。","Wǒ shì xuésheng.","I am a student."],
+"书":["这本书很好。","Zhè běn shū hěn hǎo.","This book is good."],
+"水":["请给我一杯水。","Qǐng gěi wǒ yì bēi shuǐ.","Please give me a glass of water."],
+"水果":["你喜欢什么水果？","Nǐ xǐhuan shénme shuǐguǒ?","What fruit do you like?"],
+"睡觉":["我十一点睡觉。","Wǒ shíyī diǎn shuìjiào.","I go to sleep at eleven."],
+"说":["请再说一次。","Qǐng zài shuō yí cì.","Please say it again."],
+"四":["现在四点。","Xiànzài sì diǎn.","It's four o'clock."],
+"岁":["我儿子三岁。","Wǒ érzi sān suì.","My son is three years old."],
+"他":["他是我哥哥。","Tā shì wǒ gēge.","He is my older brother."],
+"她":["她是我的老师。","Tā shì wǒ de lǎoshī.","She is my teacher."],
+"太":["这个太贵了。","Zhège tài guì le.","This is too expensive."],
+"天气":["今天天气怎么样？","Jīntiān tiānqì zěnmeyàng?","How's the weather today?"],
+"听":["我喜欢听音乐。","Wǒ xǐhuan tīng yīnyuè.","I like listening to music."],
+"同学":["他是我的同学。","Tā shì wǒ de tóngxué.","He is my classmate."],
+"喂":["喂，你是谁？","Wéi, nǐ shì shéi?","Hello, who is this?"],
+"我":["我是中国人。","Wǒ shì Zhōngguó rén.","I am Chinese."],
+"我们":["我们一起去吧。","Wǒmen yìqǐ qù ba.","Let's go together."],
+"五":["我五点回家。","Wǒ wǔ diǎn huí jiā.","I go home at five."],
+"喜欢":["我喜欢小猫。","Wǒ xǐhuan xiǎo māo.","I like kittens."],
+"下":["猫在桌子下。","Māo zài zhuōzi xià.","The cat is under the table."],
+"下午":["下午我去买东西。","Xiàwǔ wǒ qù mǎi dōngxi.","I'll go shopping in the afternoon."],
+"下雨":["今天下雨了。","Jīntiān xiàyǔ le.","It rained today."],
+"先生":["王先生是医生。","Wáng xiānsheng shì yīshēng.","Mr. Wang is a doctor."],
+"现在":["现在我很忙。","Xiànzài wǒ hěn máng.","I'm busy now."],
+"想":["我想回家。","Wǒ xiǎng huí jiā.","I want to go home."],
+"小":["这只狗很小。","Zhè zhī gǒu hěn xiǎo.","This dog is small."],
+"小姐":["李小姐在家吗？","Lǐ xiǎojiě zài jiā ma?","Is Miss Li home?"],
+"些":["我买了一些水果。","Wǒ mǎi le yìxiē shuǐguǒ.","I bought some fruit."],
+"写":["请写你的名字。","Qǐng xiě nǐ de míngzi.","Please write your name."],
+"谢谢":["谢谢你的帮助。","Xièxie nǐ de bāngzhù.","Thanks for your help."],
+"星期":["一个星期有七天。","Yí gè xīngqī yǒu qī tiān.","A week has seven days."],
+"学生":["她是我的学生。","Tā shì wǒ de xuésheng.","She is my student."],
+"学习":["我们一起学习。","Wǒmen yìqǐ xuéxí.","We study together."],
+"学校":["我们学校很大。","Wǒmen xuéxiào hěn dà.","Our school is big."],
+"一":["我有一个妹妹。","Wǒ yǒu yí gè mèimei.","I have a younger sister."],
+"衣服":["这件衣服很漂亮。","Zhè jiàn yīfu hěn piàoliang.","This piece of clothing is pretty."],
+"医生":["我爸爸是医生。","Wǒ bàba shì yīshēng.","My dad is a doctor."],
+"医院":["医院在学校旁边。","Yīyuàn zài xuéxiào pángbiān.","The hospital is next to the school."],
+"椅子":["请坐在椅子上。","Qǐng zuò zài yǐzi shàng.","Please sit on the chair."],
+"一点儿":["我会说一点儿汉语。","Wǒ huì shuō yìdiǎnr Hànyǔ.","I can speak a little Chinese."],
+"有":["我有两个孩子。","Wǒ yǒu liǎng gè háizi.","I have two children."],
+"月":["一年有十二个月。","Yì nián yǒu shí'èr gè yuè.","A year has twelve months."],
+"再见":["老师，再见！","Lǎoshī, zàijiàn!","Goodbye, teacher!"],
+"在":["他在北京工作。","Tā zài Běijīng gōngzuò.","He works in Beijing."],
+"怎么":["这个字怎么读？","Zhège zì zěnme dú?","How do you read this character?"],
+"怎么样":["我们去吃饭，怎么样？","Wǒmen qù chīfàn, zěnmeyàng?","Let's go eat — how about it?"],
+"这":["这是什么？","Zhè shì shénme?","What is this?"],
+"中国":["中国很大。","Zhōngguó hěn dà.","China is big."],
+"中午":["中午我们吃面条。","Zhōngwǔ wǒmen chī miàntiáo.","We eat noodles at noon."],
+"住":["你住在哪儿？","Nǐ zhù zài nǎr?","Where do you live?"],
+"桌子":["桌子上有一本书。","Zhuōzi shàng yǒu yì běn shū.","There's a book on the table."],
+"字":["这个字很难写。","Zhège zì hěn nán xiě.","This character is hard to write."],
+"昨天":["昨天我很忙。","Zuótiān wǒ hěn máng.","I was busy yesterday."],
+"坐":["请坐这儿。","Qǐng zuò zhèr.","Please sit here."],
+"做":["你在做什么？","Nǐ zài zuò shénme?","What are you doing?"],
+"吧":["我们走吧。","Wǒmen zǒu ba.","Let's go."],
+"白":["她穿白衣服。","Tā chuān bái yīfu.","She wears white clothes."],
+"百":["这本书一百块。","Zhè běn shū yìbǎi kuài.","This book is 100 yuan."],
+"帮助":["老师帮助了我。","Lǎoshī bāngzhù le wǒ.","The teacher helped me."],
+"报纸":["爸爸在看报纸。","Bàba zài kàn bàozhǐ.","Dad is reading the newspaper."],
+"比":["我比他高。","Wǒ bǐ tā gāo.","I am taller than him."],
+"别":["别说话！","Bié shuōhuà!","Don't talk!"],
+"宾馆":["我们住在宾馆。","Wǒmen zhù zài bīnguǎn.","We are staying at a hotel."],
+"长":["这条路很长。","Zhè tiáo lù hěn cháng.","This road is long."],
+"唱歌":["她唱歌很好听。","Tā chànggē hěn hǎotīng.","She sings beautifully."],
+"出":["他出门了。","Tā chū mén le.","He went out."],
+"穿":["今天穿什么？","Jīntiān chuān shénme?","What should I wear today?"],
+"次":["我去过两次北京。","Wǒ qùguo liǎng cì Běijīng.","I've been to Beijing twice."],
+"从":["我从家里来。","Wǒ cóng jiā lǐ lái.","I came from home."],
+"错":["你说错了。","Nǐ shuō cuò le.","You said it wrong."],
+"打篮球":["我们去打篮球吧。","Wǒmen qù dǎ lánqiú ba.","Let's go play basketball."],
+"大家":["大家好！","Dàjiā hǎo!","Hello everyone!"],
+"到":["我到学校了。","Wǒ dào xuéxiào le.","I've arrived at school."],
+"得":["他跑得很快。","Tā pǎo de hěn kuài.","He runs fast."],
+"等":["请等我一下。","Qǐng děng wǒ yíxià.","Please wait for me a moment."],
+"弟弟":["弟弟比我小。","Dìdi bǐ wǒ xiǎo.","My little brother is younger than me."],
+"第一":["他是第一名。","Tā shì dì-yī míng.","He is in first place."],
+"懂":["我懂了。","Wǒ dǒng le.","I understand now."],
+"对":["你说得对。","Nǐ shuō de duì.","You're right."],
+"房间":["我的房间很小。","Wǒ de fángjiān hěn xiǎo.","My room is small."],
+"非常":["我非常喜欢这本书。","Wǒ fēicháng xǐhuan zhè běn shū.","I really like this book."],
+"服务员":["服务员，请给我菜单。","Fúwùyuán, qǐng gěi wǒ càidān.","Waiter, please give me the menu."],
+"高":["他个子很高。","Tā gèzi hěn gāo.","He is tall."],
+"告诉":["请告诉我你的名字。","Qǐng gàosu wǒ nǐ de míngzi.","Please tell me your name."],
+"哥哥":["我哥哥会开车。","Wǒ gēge huì kāichē.","My older brother can drive."],
+"给":["请给我一杯茶。","Qǐng gěi wǒ yì bēi chá.","Please give me a cup of tea."],
+"公共汽车":["我坐公共汽车上班。","Wǒ zuò gōnggòng qìchē shàngbān.","I take the bus to work."],
+"公司":["他在大公司工作。","Tā zài dà gōngsī gōngzuò.","He works at a big company."],
+"贵":["这件衣服很贵。","Zhè jiàn yīfu hěn guì.","This clothing is expensive."],
+"过":["我去过中国。","Wǒ qùguo Zhōngguó.","I have been to China."],
+"还":["他还在睡觉。","Tā hái zài shuìjiào.","He is still sleeping."],
+"孩子":["孩子们在玩。","Háizimen zài wán.","The children are playing."],
+"好吃":["妈妈做的菜真好吃。","Māma zuò de cài zhēn hǎochī.","Mom's cooking is delicious."],
+"黑":["天黑了。","Tiān hēi le.","It's getting dark."],
+"红":["我喜欢红色。","Wǒ xǐhuan hóngsè.","I like the color red."],
+"火车站":["火车站离这儿很近。","Huǒchēzhàn lí zhèr hěn jìn.","The train station is close to here."],
+"机场":["我去机场接朋友。","Wǒ qù jīchǎng jiē péngyou.","I'm going to the airport to pick up a friend."],
+"鸡蛋":["我早上吃两个鸡蛋。","Wǒ zǎoshang chī liǎng gè jīdàn.","I eat two eggs in the morning."],
+"件":["我买了一件衣服。","Wǒ mǎi le yí jiàn yīfu.","I bought a piece of clothing."],
+"教室":["教室里有很多学生。","Jiàoshì lǐ yǒu hěn duō xuésheng.","There are many students in the classroom."],
+"姐姐":["姐姐在医院工作。","Jiějie zài yīyuàn gōngzuò.","My older sister works at a hospital."],
+"介绍":["我来介绍一下。","Wǒ lái jièshào yíxià.","Let me introduce."],
+"进":["请进！","Qǐng jìn!","Please come in!"],
+"近":["我家离学校很近。","Wǒ jiā lí xuéxiào hěn jìn.","My home is close to school."],
+"就":["我马上就来。","Wǒ mǎshàng jiù lái.","I'll come right away."],
+"觉得":["我觉得很累。","Wǒ juéde hěn lèi.","I feel tired."],
+"咖啡":["我每天喝咖啡。","Wǒ měitiān hē kāfēi.","I drink coffee every day."],
+"开始":["电影开始了。","Diànyǐng kāishǐ le.","The movie has started."],
+"考试":["明天有考试。","Míngtiān yǒu kǎoshì.","There's an exam tomorrow."],
+"可能":["他可能生病了。","Tā kěnéng shēngbìng le.","He might be sick."],
+"可以":["我可以进来吗？","Wǒ kěyǐ jìnlai ma?","May I come in?"],
+"课":["我下午没有课。","Wǒ xiàwǔ méiyǒu kè.","I don't have class in the afternoon."],
+"快":["快点儿，要迟到了！","Kuài diǎnr, yào chídào le!","Hurry up, we'll be late!"],
+"快乐":["生日快乐！","Shēngrì kuàilè!","Happy birthday!"],
+"累":["我今天很累。","Wǒ jīntiān hěn lèi.","I'm tired today."],
+"离":["机场离这儿很远。","Jīchǎng lí zhèr hěn yuǎn.","The airport is far from here."],
+"两":["我有两个哥哥。","Wǒ yǒu liǎng gè gēge.","I have two older brothers."],
+"零":["二零二六年。","Èr líng èr liù nián.","The year 2026."],
+"路":["路上人很多。","Lùshang rén hěn duō.","There are many people on the road."],
+"旅游":["我想去中国旅游。","Wǒ xiǎng qù Zhōngguó lǚyóu.","I want to travel to China."],
+"卖":["这家商店卖水果。","Zhè jiā shāngdiàn mài shuǐguǒ.","This store sells fruit."],
+"慢":["请说慢一点儿。","Qǐng shuō màn yìdiǎnr.","Please speak a little slower."],
+"忙":["我最近很忙。","Wǒ zuìjìn hěn máng.","I've been busy lately."],
+"每":["我每天都学习汉语。","Wǒ měitiān dōu xuéxí Hànyǔ.","I study Chinese every day."],
+"妹妹":["妹妹喜欢唱歌。","Mèimei xǐhuan chànggē.","My little sister likes singing."],
+"门":["门开着。","Mén kāizhe.","The door is open."],
+"面条":["我中午吃了面条。","Wǒ zhōngwǔ chī le miàntiáo.","I ate noodles at noon."],
+"男":["那个男孩子是谁？","Nàge nán háizi shì shéi?","Who is that boy?"],
+"您":["您好，王老师！","Nín hǎo, Wáng lǎoshī!","Hello, Teacher Wang!"],
+"牛奶":["我每天早上喝牛奶。","Wǒ měitiān zǎoshang hē niúnǎi.","I drink milk every morning."],
+"女":["她是个女医生。","Tā shì gè nǚ yīshēng.","She is a female doctor."],
+"旁边":["银行在商店旁边。","Yínháng zài shāngdiàn pángbiān.","The bank is next to the store."],
+"跑步":["我早上去跑步。","Wǒ zǎoshang qù pǎobù.","I go running in the morning."],
+"便宜":["这个很便宜。","Zhège hěn piányi.","This is cheap."],
+"票":["我买了两张票。","Wǒ mǎi le liǎng zhāng piào.","I bought two tickets."],
+"妻子":["他的妻子是老师。","Tā de qīzi shì lǎoshī.","His wife is a teacher."],
+"起床":["我六点起床。","Wǒ liù diǎn qǐchuáng.","I get up at six."],
+"千":["这个手机三千块。","Zhège shǒujī sān qiān kuài.","This phone costs 3,000 yuan."],
+"铅笔":["请用铅笔写。","Qǐng yòng qiānbǐ xiě.","Please write in pencil."],
+"晴":["今天是晴天。","Jīntiān shì qíngtiān.","It's a sunny day today."],
+"去年":["去年我去了北京。","Qùnián wǒ qù le Běijīng.","Last year I went to Beijing."],
+"让":["妈妈不让我看电视。","Māma bú ràng wǒ kàn diànshì.","Mom doesn't let me watch TV."],
+"日":["今天是十月一日。","Jīntiān shì shí yuè yī rì.","Today is October 1st."],
+"上班":["我八点上班。","Wǒ bā diǎn shàngbān.","I start work at eight."],
+"身体":["他身体很好。","Tā shēntǐ hěn hǎo.","He is in good health."],
+"生病":["妹妹生病了。","Mèimei shēngbìng le.","My little sister is sick."],
+"生日":["明天是我的生日。","Míngtiān shì wǒ de shēngrì.","Tomorrow is my birthday."],
+"时间":["我没有时间。","Wǒ méiyǒu shíjiān.","I don't have time."],
+"事情":["我有一件事情要做。","Wǒ yǒu yí jiàn shìqing yào zuò.","I have something to do."],
+"手表":["这块手表很贵。","Zhè kuài shǒubiǎo hěn guì.","This watch is expensive."],
+"手机":["我的手机不见了。","Wǒ de shǒujī bú jiàn le.","My phone is missing."],
+"说话":["他不喜欢说话。","Tā bù xǐhuan shuōhuà.","He doesn't like talking."],
+"送":["我送你一个礼物。","Wǒ sòng nǐ yí gè lǐwù.","I'll give you a gift."],
+"虽然":["虽然很累，但是很快乐。","Suīrán hěn lèi, dànshì hěn kuàilè.","Although I'm tired, I'm happy."],
+"所以":["下雨了，所以我在家。","Xiàyǔ le, suǒyǐ wǒ zài jiā.","It's raining, so I'm at home."],
+"它":["它是我的小猫。","Tā shì wǒ de xiǎo māo.","It is my kitten."],
+"踢足球":["弟弟喜欢踢足球。","Dìdi xǐhuan tī zúqiú.","My little brother likes playing soccer."],
+"题":["这个题很难。","Zhège tí hěn nán.","This question is hard."],
+"跳舞":["她跳舞跳得很好。","Tā tiàowǔ tiào de hěn hǎo.","She dances very well."],
+"外":["外面下雨了。","Wàimiàn xiàyǔ le.","It's raining outside."],
+"完":["我做完作业了。","Wǒ zuò wán zuòyè le.","I finished my homework."],
+"玩":["孩子们在外面玩。","Háizimen zài wàimiàn wán.","The kids are playing outside."],
+"晚上":["晚上我看电视。","Wǎnshang wǒ kàn diànshì.","I watch TV in the evening."],
+"往":["往前走。","Wǎng qián zǒu.","Walk forward."],
+"为什么":["你为什么不吃饭？","Nǐ wèishénme bù chīfàn?","Why aren't you eating?"],
+"问":["我想问一个问题。","Wǒ xiǎng wèn yí gè wèntí.","I want to ask a question."],
+"问题":["这个问题很简单。","Zhège wèntí hěn jiǎndān.","This question is simple."],
+"西瓜":["夏天我爱吃西瓜。","Xiàtiān wǒ ài chī xīguā.","I love eating watermelon in summer."],
+"希望":["我希望明天是晴天。","Wǒ xīwàng míngtiān shì qíngtiān.","I hope tomorrow is sunny."],
+"洗":["我去洗手。","Wǒ qù xǐ shǒu.","I'm going to wash my hands."],
+"小时":["我等了两个小时。","Wǒ děng le liǎng gè xiǎoshí.","I waited for two hours."],
+"笑":["大家都笑了。","Dàjiā dōu xiào le.","Everyone laughed."],
+"新":["我买了新手机。","Wǒ mǎi le xīn shǒujī.","I bought a new phone."],
+"姓":["我姓王。","Wǒ xìng Wáng.","My surname is Wang."],
+"休息":["你休息一下吧。","Nǐ xiūxi yíxià ba.","Take a rest."],
+"雪":["昨天下雪了。","Zuótiān xià xuě le.","It snowed yesterday."],
+"颜色":["你喜欢什么颜色？","Nǐ xǐhuan shénme yánsè?","What color do you like?"],
+"眼睛":["她的眼睛很大。","Tā de yǎnjing hěn dà.","Her eyes are big."],
+"羊肉":["我不吃羊肉。","Wǒ bù chī yángròu.","I don't eat mutton."],
+"药":["我吃了药，好多了。","Wǒ chī le yào, hǎo duō le.","I took medicine and feel much better."],
+"要":["我要一杯咖啡。","Wǒ yào yì bēi kāfēi.","I want a cup of coffee."],
+"也":["我也是学生。","Wǒ yě shì xuésheng.","I am also a student."],
+"已经":["他已经走了。","Tā yǐjīng zǒu le.","He has already left."],
+"一起":["我们一起吃饭吧。","Wǒmen yìqǐ chīfàn ba.","Let's eat together."],
+"意思":["这个词是什么意思？","Zhège cí shì shénme yìsi?","What does this word mean?"],
+"阴":["今天天阴了。","Jīntiān tiān yīn le.","It's cloudy today."],
+"因为":["因为下雨，我没去。","Yīnwèi xiàyǔ, wǒ méi qù.","Because it rained, I didn't go."],
+"游泳":["我喜欢游泳。","Wǒ xǐhuan yóuyǒng.","I like swimming."],
+"右边":["商店在右边。","Shāngdiàn zài yòubian.","The store is on the right."],
+"鱼":["猫爱吃鱼。","Māo ài chī yú.","Cats love eating fish."],
+"远":["我家离公司很远。","Wǒ jiā lí gōngsī hěn yuǎn.","My home is far from the company."],
+"运动":["运动对身体好。","Yùndòng duì shēntǐ hǎo.","Exercise is good for your health."],
+"再":["请再来一次。","Qǐng zài lái yí cì.","Please come again."],
+"早上":["早上好！","Zǎoshang hǎo!","Good morning!"],
+"丈夫":["她丈夫在公司上班。","Tā zhàngfu zài gōngsī shàngbān.","Her husband works at a company."],
+"找":["你在找什么？","Nǐ zài zhǎo shénme?","What are you looking for?"],
+"着":["她穿着红衣服。","Tā chuānzhe hóng yīfu.","She is wearing red clothes."],
+"真":["今天真冷！","Jīntiān zhēn lěng!","It's really cold today!"],
+"正在":["我正在吃饭。","Wǒ zhèngzài chīfàn.","I am eating right now."],
+"知道":["我不知道他的名字。","Wǒ bù zhīdào tā de míngzi.","I don't know his name."],
+"准备":["我在准备考试。","Wǒ zài zhǔnbèi kǎoshì.","I'm preparing for the exam."],
+"走":["我们走路去吧。","Wǒmen zǒulù qù ba.","Let's walk there."],
+"最":["我最喜欢春天。","Wǒ zuì xǐhuan chūntiān.","I like spring the most."],
+"左边":["医院在左边。","Yīyuàn zài zuǒbian.","The hospital is on the left."],
+"但是":["我想去，但是没时间。","Wǒ xiǎng qù, dànshì méi shíjiān.","I want to go, but I don't have time."],
+"阿姨":["阿姨对我很好。","Āyí duì wǒ hěn hǎo.","Auntie is very nice to me."],
+"啊":["这里真漂亮啊！","Zhèlǐ zhēn piàoliang a!","It's so beautiful here!"],
+"矮":["他比我矮。","Tā bǐ wǒ ǎi.","He is shorter than me."],
+"爱好":["我的爱好是看书。","Wǒ de àihào shì kàn shū.","My hobby is reading."],
+"安静":["请安静一点儿。","Qǐng ānjìng yìdiǎnr.","Please be a little quieter."],
+"把":["请把门关上。","Qǐng bǎ mén guānshàng.","Please close the door."],
+"班":["我们班有二十个学生。","Wǒmen bān yǒu èrshí gè xuésheng.","Our class has twenty students."],
+"搬":["我们下个月搬家。","Wǒmen xià gè yuè bānjiā.","We're moving next month."],
+"办法":["我有一个好办法。","Wǒ yǒu yí gè hǎo bànfǎ.","I have a good way to do it."],
+"办公室":["经理在办公室。","Jīnglǐ zài bàngōngshì.","The manager is in the office."],
+"半":["现在三点半。","Xiànzài sān diǎn bàn.","It's three thirty."],
+"帮忙":["你能帮忙吗？","Nǐ néng bāngmáng ma?","Can you help out?"],
+"包":["我的包里有书。","Wǒ de bāo lǐ yǒu shū.","There are books in my bag."],
+"饱":["我吃饱了。","Wǒ chī bǎo le.","I'm full."],
+"北方":["北方的冬天很冷。","Běifāng de dōngtiān hěn lěng.","Winters in the north are cold."],
+"被":["蛋糕被弟弟吃了。","Dàngāo bèi dìdi chī le.","The cake was eaten by my little brother."],
+"鼻子":["他的鼻子很高。","Tā de bízi hěn gāo.","He has a prominent nose."],
+"比较":["今天比较热。","Jīntiān bǐjiào rè.","It's rather hot today."],
+"比赛":["明天有足球比赛。","Míngtiān yǒu zúqiú bǐsài.","There's a soccer match tomorrow."],
+"笔记本":["我的笔记本电脑坏了。","Wǒ de bǐjìběn diànnǎo huài le.","My laptop is broken."],
+"必须":["你必须努力学习。","Nǐ bìxū nǔlì xuéxí.","You must study hard."],
+"变化":["城市的变化很大。","Chéngshì de biànhuà hěn dà.","The city has changed a lot."],
+"别人":["别人都走了。","Biérén dōu zǒu le.","Everyone else has left."],
+"冰箱":["冰箱里有牛奶。","Bīngxiāng lǐ yǒu niúnǎi.","There's milk in the fridge."],
+"不但":["她不但聪明，而且努力。","Tā búdàn cōngming, érqiě nǔlì.","She's not only smart but also hardworking."],
+"菜单":["请给我看看菜单。","Qǐng gěi wǒ kànkan càidān.","Please show me the menu."],
+"参加":["我想参加比赛。","Wǒ xiǎng cānjiā bǐsài.","I want to take part in the competition."],
+"草":["公园里的草很绿。","Gōngyuán lǐ de cǎo hěn lǜ.","The grass in the park is green."],
+"层":["我住在五层。","Wǒ zhù zài wǔ céng.","I live on the fifth floor."],
+"差":["现在差五分八点。","Xiànzài chà wǔ fēn bā diǎn.","It's five minutes to eight."],
+"超市":["我去超市买东西。","Wǒ qù chāoshì mǎi dōngxi.","I'm going shopping at the supermarket."],
+"衬衫":["他穿着白衬衫。","Tā chuānzhe bái chènshān.","He's wearing a white shirt."],
+"成绩":["她的成绩很好。","Tā de chéngjì hěn hǎo.","Her grades are good."],
+"城市":["北京是个大城市。","Běijīng shì gè dà chéngshì.","Beijing is a big city."],
+"迟到":["对不起，我迟到了。","Duìbuqǐ, wǒ chídào le.","Sorry, I'm late."],
+"除了":["除了他，大家都来了。","Chúle tā, dàjiā dōu lái le.","Everyone came except him."],
+"船":["我们坐船去。","Wǒmen zuò chuán qù.","We're going by boat."],
+"春":["春天来了。","Chūntiān lái le.","Spring is here."],
+"词语":["我学了很多新词语。","Wǒ xué le hěn duō xīn cíyǔ.","I learned many new words."],
+"聪明":["这个孩子很聪明。","Zhège háizi hěn cōngming.","This child is smart."],
+"打扫":["我在打扫房间。","Wǒ zài dǎsǎo fángjiān.","I'm cleaning the room."],
+"打算":["你打算去哪儿？","Nǐ dǎsuàn qù nǎr?","Where do you plan to go?"],
+"带":["别忘了带伞。","Bié wàng le dài sǎn.","Don't forget to bring an umbrella."],
+"担心":["妈妈很担心我。","Māma hěn dānxīn wǒ.","Mom worries about me."],
+"蛋糕":["生日蛋糕真好吃。","Shēngrì dàngāo zhēn hǎochī.","The birthday cake is delicious."],
+"当然":["当然可以！","Dāngrán kěyǐ!","Of course you can!"],
+"地":["他高兴地笑了。","Tā gāoxìng de xiào le.","He smiled happily."],
+"灯":["请开灯。","Qǐng kāi dēng.","Please turn on the light."],
+"地方":["这个地方很安静。","Zhège dìfang hěn ānjìng.","This place is quiet."],
+"地铁":["我坐地铁上班。","Wǒ zuò dìtiě shàngbān.","I take the subway to work."],
+"地图":["我看不懂这张地图。","Wǒ kàn bu dǒng zhè zhāng dìtú.","I can't understand this map."],
+"电梯":["电梯坏了。","Diàntī huài le.","The elevator is broken."],
+"电子邮件":["请给我发电子邮件。","Qǐng gěi wǒ fā diànzǐ yóujiàn.","Please send me an email."],
+"东":["太阳从东边出来。","Tàiyáng cóng dōngbian chūlai.","The sun rises in the east."],
+"冬":["冬天下雪。","Dōngtiān xià xuě.","It snows in winter."],
+"动物":["熊猫是可爱的动物。","Xióngmāo shì kě'ài de dòngwù.","Pandas are cute animals."],
+"短":["这条裤子太短了。","Zhè tiáo kùzi tài duǎn le.","These pants are too short."],
+"段":["请读第一段。","Qǐng dú dì-yī duàn.","Please read the first paragraph."],
+"锻炼":["爷爷每天锻炼身体。","Yéye měitiān duànliàn shēntǐ.","Grandpa exercises every day."],
+"多么":["多么漂亮的花啊！","Duōme piàoliang de huā a!","What beautiful flowers!"],
+"饿":["我饿了，想吃饭。","Wǒ è le, xiǎng chīfàn.","I'm hungry and want to eat."],
+"耳朵":["我的耳朵疼。","Wǒ de ěrduo téng.","My ear hurts."],
+"发":["他给我发了电子邮件。","Tā gěi wǒ fā le diànzǐ yóujiàn.","He sent me an email."],
+"发烧":["孩子发烧了。","Háizi fāshāo le.","The child has a fever."],
+"发现":["我发现了一个问题。","Wǒ fāxiàn le yí gè wèntí.","I found a problem."],
+"方便":["坐地铁很方便。","Zuò dìtiě hěn fāngbiàn.","Taking the subway is convenient."],
+"放":["把书放在桌子上。","Bǎ shū fàng zài zhuōzi shàng.","Put the book on the table."],
+"放心":["你放心吧，没问题。","Nǐ fàngxīn ba, méi wèntí.","Don't worry, it's no problem."],
+"分":["现在八点十分。","Xiànzài bā diǎn shí fēn.","It's 8:10 now."],
+"附近":["附近有超市吗？","Fùjìn yǒu chāoshì ma?","Is there a supermarket nearby?"],
+"复习":["我在复习汉语。","Wǒ zài fùxí Hànyǔ.","I'm reviewing Chinese."],
+"干净":["房间很干净。","Fángjiān hěn gānjìng.","The room is clean."],
+"感冒":["我感冒了。","Wǒ gǎnmào le.","I caught a cold."],
+"感兴趣":["我对历史感兴趣。","Wǒ duì lìshǐ gǎn xìngqù.","I'm interested in history."],
+"刚才":["刚才谁来了？","Gāngcái shéi lái le?","Who came just now?"],
+"个子":["弟弟个子很高。","Dìdi gèzi hěn gāo.","My little brother is tall."],
+"根据":["根据地图，银行在前面。","Gēnjù dìtú, yínháng zài qiánmiàn.","According to the map, the bank is ahead."],
+"跟":["我跟你一起去。","Wǒ gēn nǐ yìqǐ qù.","I'll go with you."],
+"更":["今天比昨天更冷。","Jīntiān bǐ zuótiān gèng lěng.","Today is even colder than yesterday."],
+"公斤":["我买了两公斤苹果。","Wǒ mǎi le liǎng gōngjīn píngguǒ.","I bought two kilos of apples."],
+"公园":["我们去公园走走。","Wǒmen qù gōngyuán zǒuzou.","Let's take a walk in the park."],
+"故事":["奶奶给我讲故事。","Nǎinai gěi wǒ jiǎng gùshi.","Grandma tells me stories."],
+"刮风":["外面刮风了。","Wàimiàn guāfēng le.","It's windy outside."],
+"关":["请关灯。","Qǐng guān dēng.","Please turn off the light."],
+"关系":["我们的关系很好。","Wǒmen de guānxi hěn hǎo.","Our relationship is good."],
+"关心":["老师很关心学生。","Lǎoshī hěn guānxīn xuésheng.","The teacher cares about the students."],
+"关于":["这是关于历史的书。","Zhè shì guānyú lìshǐ de shū.","This is a book about history."],
+"国家":["中国是一个大国家。","Zhōngguó shì yí gè dà guójiā.","China is a big country."],
+"过去":["过去这里是学校。","Guòqù zhèlǐ shì xuéxiào.","This used to be a school."],
+"还是":["你喝茶还是咖啡？","Nǐ hē chá háishi kāfēi?","Would you like tea or coffee?"],
+"害怕":["我害怕狗。","Wǒ hàipà gǒu.","I'm afraid of dogs."],
+"黑板":["老师在黑板上写字。","Lǎoshī zài hēibǎn shàng xiě zì.","The teacher writes on the blackboard."],
+"后来":["后来他去了北京。","Hòulái tā qù le Běijīng.","Later he went to Beijing."],
+"护照":["别忘了带护照。","Bié wàng le dài hùzhào.","Don't forget your passport."],
+"花":["公园里的花开了。","Gōngyuán lǐ de huā kāi le.","The flowers in the park have bloomed."],
+"画":["她画画儿画得很好。","Tā huà huàr huà de hěn hǎo.","She draws very well."],
+"坏":["我的手机坏了。","Wǒ de shǒujī huài le.","My phone is broken."],
+"欢迎":["欢迎来我家玩！","Huānyíng lái wǒ jiā wán!","Welcome to my home!"],
+"环境":["这里的环境很好。","Zhèlǐ de huánjìng hěn hǎo.","The environment here is nice."],
+"换":["我想换一件衣服。","Wǒ xiǎng huàn yí jiàn yīfu.","I want to change clothes."],
+"黄河":["黄河很长。","Huáng Hé hěn cháng.","The Yellow River is long."],
+"回答":["请回答我的问题。","Qǐng huídá wǒ de wèntí.","Please answer my question."],
+"会议":["下午有一个会议。","Xiàwǔ yǒu yí gè huìyì.","There's a meeting this afternoon."],
+"或者":["你可以坐地铁或者公共汽车。","Nǐ kěyǐ zuò dìtiě huòzhě gōnggòng qìchē.","You can take the subway or the bus."],
+"几乎":["我几乎每天跑步。","Wǒ jīhū měitiān pǎobù.","I run almost every day."],
+"机会":["这是个好机会。","Zhè shì gè hǎo jīhuì.","This is a good opportunity."],
+"极":["这个菜好吃极了。","Zhège cài hǎochī jí le.","This dish is extremely tasty."],
+"记得":["你还记得我吗？","Nǐ hái jìde wǒ ma?","Do you still remember me?"],
+"季节":["你最喜欢哪个季节？","Nǐ zuì xǐhuan nǎge jìjié?","Which season do you like best?"],
+"检查":["医生给我检查身体。","Yīshēng gěi wǒ jiǎnchá shēntǐ.","The doctor examines me."],
+"简单":["这个题很简单。","Zhège tí hěn jiǎndān.","This question is simple."],
+"见面":["我们明天见面吧。","Wǒmen míngtiān jiànmiàn ba.","Let's meet tomorrow."],
+"健康":["祝你身体健康！","Zhù nǐ shēntǐ jiànkāng!","Wishing you good health!"],
+"讲":["老师讲得很清楚。","Lǎoshī jiǎng de hěn qīngchu.","The teacher explains clearly."],
+"教":["妈妈教我做饭。","Māma jiāo wǒ zuò fàn.","Mom teaches me to cook."],
+"角":["这本书五块三角。","Zhè běn shū wǔ kuài sān jiǎo.","This book costs 5.30 yuan."],
+"脚":["我的脚很疼。","Wǒ de jiǎo hěn téng.","My foot hurts."],
+"接":["爸爸去学校接我。","Bàba qù xuéxiào jiē wǒ.","Dad picks me up from school."],
+"街道":["这条街道很干净。","Zhè tiáo jiēdào hěn gānjìng.","This street is clean."],
+"节目":["这个节目很有意思。","Zhège jiémù hěn yǒu yìsi.","This show is interesting."],
+"节日":["春节是中国的节日。","Chūnjié shì Zhōngguó de jiérì.","Spring Festival is a Chinese holiday."],
+"结婚":["他们去年结婚了。","Tāmen qùnián jiéhūn le.","They got married last year."],
+"结束":["会议结束了。","Huìyì jiéshù le.","The meeting is over."],
+"解决":["问题解决了。","Wèntí jiějué le.","The problem is solved."],
+"借":["我想借这本书。","Wǒ xiǎng jiè zhè běn shū.","I want to borrow this book."],
+"经常":["我经常去图书馆。","Wǒ jīngcháng qù túshūguǎn.","I often go to the library."],
+"经过":["我每天经过公园。","Wǒ měitiān jīngguò gōngyuán.","I pass by the park every day."],
+"经理":["他是公司的经理。","Tā shì gōngsī de jīnglǐ.","He is the company's manager."],
+"久":["好久不见！","Hǎo jiǔ bú jiàn!","Long time no see!"],
+"旧":["这是一本旧书。","Zhè shì yì běn jiù shū.","This is an old book."],
+"句子":["请读这个句子。","Qǐng dú zhège jùzi.","Please read this sentence."],
+"决定":["我们决定坐火车去。","Wǒmen juédìng zuò huǒchē qù.","We decided to go by train."],
+"可爱":["小猫真可爱。","Xiǎo māo zhēn kě'ài.","The kitten is so cute."],
+"渴":["我渴了，想喝水。","Wǒ kě le, xiǎng hē shuǐ.","I'm thirsty and want some water."],
+"刻":["现在三点一刻。","Xiànzài sān diǎn yí kè.","It's a quarter past three."],
+"客人":["家里来了客人。","Jiā lǐ lái le kèrén.","Guests came to our home."],
+"空调":["请打开空调。","Qǐng dǎkāi kōngtiáo.","Please turn on the air conditioner."],
+"口":["我家有五口人。","Wǒ jiā yǒu wǔ kǒu rén.","There are five people in my family."],
+"哭":["孩子哭了。","Háizi kū le.","The child is crying."],
+"裤子":["这条裤子很好看。","Zhè tiáo kùzi hěn hǎokàn.","These pants look nice."],
+"筷子":["我会用筷子。","Wǒ huì yòng kuàizi.","I can use chopsticks."],
+"蓝":["天很蓝。","Tiān hěn lán.","The sky is very blue."],
+"老":["爷爷老了。","Yéye lǎo le.","Grandpa is getting old."],
+"离开":["他离开了北京。","Tā líkāi le Běijīng.","He left Beijing."],
+"礼物":["这是给你的礼物。","Zhè shì gěi nǐ de lǐwù.","This is a gift for you."],
+"历史":["我喜欢中国历史。","Wǒ xǐhuan Zhōngguó lìshǐ.","I like Chinese history."],
+"脸":["她的脸红了。","Tā de liǎn hóng le.","Her face turned red."],
+"练习":["我每天练习写汉字。","Wǒ měitiān liànxí xiě Hànzì.","I practice writing characters every day."],
+"辆":["他买了一辆车。","Tā mǎi le yí liàng chē.","He bought a car."],
+"聊天":["我们坐下来聊天吧。","Wǒmen zuò xiàlai liáotiān ba.","Let's sit down and chat."],
+"了解":["我很了解他。","Wǒ hěn liǎojiě tā.","I know him well."],
+"邻居":["我的邻居很热情。","Wǒ de línjū hěn rèqíng.","My neighbor is friendly."],
+"留学":["她想去中国留学。","Tā xiǎng qù Zhōngguó liúxué.","She wants to study abroad in China."],
+"楼":["我住在三楼。","Wǒ zhù zài sān lóu.","I live on the third floor."],
+"绿":["树都绿了。","Shù dōu lǜ le.","The trees have turned green."],
+"马":["我会骑马。","Wǒ huì qí mǎ.","I can ride a horse."],
+"马上":["我马上就到。","Wǒ mǎshàng jiù dào.","I'll be there right away."],
+"满意":["我对成绩很满意。","Wǒ duì chéngjì hěn mǎnyì.","I'm satisfied with my grades."],
+"帽子":["这个帽子很好看。","Zhège màozi hěn hǎokàn.","This hat looks nice."],
+"米":["他个子一米八。","Tā gèzi yì mǐ bā.","He is 1.8 meters tall."],
+"面包":["早饭我吃面包。","Zǎofàn wǒ chī miànbāo.","I eat bread for breakfast."],
+"明白":["我明白你的意思。","Wǒ míngbai nǐ de yìsi.","I understand what you mean."],
+"拿":["请帮我拿一下包。","Qǐng bāng wǒ ná yíxià bāo.","Please hold my bag for a moment."],
+"奶奶":["奶奶今年八十岁。","Nǎinai jīnnián bāshí suì.","Grandma is eighty this year."],
+"南":["他家在城市南边。","Tā jiā zài chéngshì nánbian.","His home is in the south of the city."],
+"难":["汉字很难写。","Hànzì hěn nán xiě.","Chinese characters are hard to write."],
+"难过":["她很难过。","Tā hěn nánguò.","She is sad."],
+"年级":["我上三年级。","Wǒ shàng sān niánjí.","I'm in the third grade."],
+"年轻":["他还很年轻。","Tā hái hěn niánqīng.","He is still young."],
+"鸟":["树上有很多鸟。","Shù shàng yǒu hěn duō niǎo.","There are many birds in the tree."],
+"努力":["她学习很努力。","Tā xuéxí hěn nǔlì.","She studies very hard."],
+"爬山":["周末我们去爬山。","Zhōumò wǒmen qù páshān.","We go hiking on the weekend."],
+"盘子":["盘子里有水果。","Pánzi lǐ yǒu shuǐguǒ.","There's fruit on the plate."],
+"胖":["这只猫太胖了。","Zhè zhī māo tài pàng le.","This cat is too fat."],
+"皮鞋":["爸爸买了新皮鞋。","Bàba mǎi le xīn píxié.","Dad bought new leather shoes."],
+"啤酒":["他喜欢喝啤酒。","Tā xǐhuan hē píjiǔ.","He likes drinking beer."],
+"瓶子":["瓶子里没有水了。","Píngzi lǐ méiyǒu shuǐ le.","There's no water left in the bottle."],
+"其实":["其实我不累。","Qíshí wǒ bú lèi.","Actually, I'm not tired."],
+"其他":["其他人都同意了。","Qítā rén dōu tóngyì le.","Everyone else agreed."],
+"奇怪":["真奇怪，门开着。","Zhēn qíguài, mén kāizhe.","How strange — the door is open."],
+"骑":["我骑自行车上学。","Wǒ qí zìxíngchē shàngxué.","I ride a bike to school."],
+"起飞":["飞机就要起飞了。","Fēijī jiù yào qǐfēi le.","The plane is about to take off."],
+"起来":["快起来，八点了！","Kuài qǐlai, bā diǎn le!","Get up quickly, it's eight!"],
+"清楚":["我听得很清楚。","Wǒ tīng de hěn qīngchu.","I can hear very clearly."],
+"请假":["我明天要请假。","Wǒ míngtiān yào qǐngjià.","I need to ask for leave tomorrow."],
+"秋":["秋天天气很好。","Qiūtiān tiānqì hěn hǎo.","The weather in autumn is nice."],
+"裙子":["她穿着红裙子。","Tā chuānzhe hóng qúnzi.","She's wearing a red skirt."],
+"然后":["先吃饭，然后学习。","Xiān chīfàn, ránhòu xuéxí.","Eat first, then study."],
+"热情":["他们对客人很热情。","Tāmen duì kèrén hěn rèqíng.","They are warm to their guests."],
+"认为":["我认为他说得对。","Wǒ rènwéi tā shuō de duì.","I think he's right."],
+"认真":["他工作很认真。","Tā gōngzuò hěn rènzhēn.","He works conscientiously."],
+"容易":["这个题很容易。","Zhège tí hěn róngyì.","This question is easy."],
+"如果":["如果下雨，我们就不去。","Rúguǒ xiàyǔ, wǒmen jiù bú qù.","If it rains, we won't go."],
+"伞":["我忘了带伞。","Wǒ wàng le dài sǎn.","I forgot to bring an umbrella."],
+"上网":["我晚上喜欢上网。","Wǒ wǎnshang xǐhuan shàngwǎng.","I like going online in the evening."],
+"生气":["妈妈生气了。","Māma shēngqì le.","Mom is angry."],
+"声音":["她的声音很好听。","Tā de shēngyīn hěn hǎotīng.","Her voice is lovely."],
+"世界":["世界很大，我想去看看。","Shìjiè hěn dà, wǒ xiǎng qù kànkan.","The world is big — I want to see it."],
+"试":["你可以试试这件衣服。","Nǐ kěyǐ shìshi zhè jiàn yīfu.","You can try on this clothing."],
+"瘦":["她比以前瘦了。","Tā bǐ yǐqián shòu le.","She's thinner than before."],
+"叔叔":["叔叔送我一本书。","Shūshu sòng wǒ yì běn shū.","My uncle gave me a book."],
+"舒服":["我今天不太舒服。","Wǒ jīntiān bú tài shūfu.","I don't feel very well today."],
+"树":["公园里有很多树。","Gōngyuán lǐ yǒu hěn duō shù.","There are many trees in the park."],
+"数学":["我的数学不太好。","Wǒ de shùxué bú tài hǎo.","My math isn't very good."],
+"刷牙":["我每天早晚刷牙。","Wǒ měitiān zǎo wǎn shuāyá.","I brush my teeth morning and night."],
+"双":["我买了一双皮鞋。","Wǒ mǎi le yì shuāng píxié.","I bought a pair of leather shoes."],
+"水平":["他的汉语水平很高。","Tā de Hànyǔ shuǐpíng hěn gāo.","His Chinese level is high."],
+"司机":["司机开车很快。","Sījī kāichē hěn kuài.","The driver drives fast."],
+"太阳":["今天太阳很大。","Jīntiān tàiyáng hěn dà.","The sun is strong today."],
+"特别":["我特别喜欢熊猫。","Wǒ tèbié xǐhuan xióngmāo.","I especially like pandas."],
+"疼":["我头疼。","Wǒ tóu téng.","I have a headache."],
+"提高":["我想提高汉语水平。","Wǒ xiǎng tígāo Hànyǔ shuǐpíng.","I want to improve my Chinese."],
+"体育":["我喜欢上体育课。","Wǒ xǐhuan shàng tǐyù kè.","I like PE class."],
+"甜":["这个西瓜真甜。","Zhège xīguā zhēn tián.","This watermelon is really sweet."],
+"条":["我买了一条裙子。","Wǒ mǎi le yì tiáo qúnzi.","I bought a skirt."],
+"同事":["我和同事一起吃午饭。","Wǒ hé tóngshì yìqǐ chī wǔfàn.","I have lunch with my colleagues."],
+"同意":["爸爸同意了。","Bàba tóngyì le.","Dad agreed."],
+"头发":["她的头发很长。","Tā de tóufa hěn cháng.","Her hair is long."],
+"突然":["天突然下雨了。","Tiān tūrán xiàyǔ le.","It suddenly started raining."],
+"图书馆":["我在图书馆看书。","Wǒ zài túshūguǎn kàn shū.","I read at the library."],
+"腿":["跑完步，腿很疼。","Pǎo wán bù, tuǐ hěn téng.","After running, my legs hurt."],
+"完成":["我完成了作业。","Wǒ wánchéng le zuòyè.","I completed my homework."],
+"碗":["我吃了一碗米饭。","Wǒ chī le yì wǎn mǐfàn.","I ate a bowl of rice."],
+"万":["这辆车十万块。","Zhè liàng chē shí wàn kuài.","This car costs 100,000 yuan."],
+"忘记":["我忘记他的名字了。","Wǒ wàngjì tā de míngzi le.","I forgot his name."],
+"为":["妈妈为我做了蛋糕。","Māma wèi wǒ zuò le dàngāo.","Mom made a cake for me."],
+"为了":["为了健康，我每天运动。","Wèile jiànkāng, wǒ měitiān yùndòng.","For my health, I exercise every day."],
+"位":["这位是王经理。","Zhè wèi shì Wáng jīnglǐ.","This is Manager Wang."],
+"文化":["我对中国文化感兴趣。","Wǒ duì Zhōngguó wénhuà gǎn xìngqù.","I'm interested in Chinese culture."],
+"西":["商店在城市西边。","Shāngdiàn zài chéngshì xībian.","The store is in the west of the city."],
+"习惯":["我习惯早起。","Wǒ xíguàn zǎo qǐ.","I'm used to getting up early."],
+"洗手间":["请问，洗手间在哪儿？","Qǐngwèn, xǐshǒujiān zài nǎr?","Excuse me, where's the restroom?"],
+"洗澡":["我晚上洗澡。","Wǒ wǎnshang xǐzǎo.","I shower in the evening."],
+"夏":["夏天很热。","Xiàtiān hěn rè.","Summer is hot."],
+"先":["你先走吧。","Nǐ xiān zǒu ba.","You go first."],
+"相信":["我相信你。","Wǒ xiāngxìn nǐ.","I believe you."],
+"香蕉":["我早上吃了一个香蕉。","Wǒ zǎoshang chī le yí gè xiāngjiāo.","I ate a banana this morning."],
+"向":["向前走，就到了。","Xiàng qián zǒu, jiù dào le.","Walk forward and you'll be there."],
+"像":["她像她妈妈。","Tā xiàng tā māma.","She looks like her mom."],
+"小心":["小心，路上有水！","Xiǎoxīn, lùshang yǒu shuǐ!","Careful, there's water on the road!"],
+"校长":["校长在开会。","Xiàozhǎng zài kāihuì.","The principal is in a meeting."],
+"新闻":["我每天看新闻。","Wǒ měitiān kàn xīnwén.","I watch the news every day."],
+"新鲜":["这些水果很新鲜。","Zhèxiē shuǐguǒ hěn xīnxiān.","These fruits are fresh."],
+"信用卡":["可以用信用卡吗？","Kěyǐ yòng xìnyòngkǎ ma?","Can I pay by credit card?"],
+"行李箱":["我的行李箱很重。","Wǒ de xínglixiāng hěn zhòng.","My suitcase is heavy."],
+"熊猫":["我在动物园看到了熊猫。","Wǒ zài dòngwùyuán kàndào le xióngmāo.","I saw pandas at the zoo."],
+"需要":["你需要帮助吗？","Nǐ xūyào bāngzhù ma?","Do you need help?"],
+"选择":["你可以选择坐火车。","Nǐ kěyǐ xuǎnzé zuò huǒchē.","You can choose to take the train."],
+"眼镜":["我的眼镜找不到了。","Wǒ de yǎnjìng zhǎo bu dào le.","I can't find my glasses."],
+"要求":["老师的要求很高。","Lǎoshī de yāoqiú hěn gāo.","The teacher's standards are high."],
+"爷爷":["爷爷喜欢喝茶。","Yéye xǐhuan hē chá.","Grandpa likes drinking tea."],
+"一般":["我一般七点起床。","Wǒ yìbān qī diǎn qǐchuáng.","I usually get up at seven."],
+"一边":["他一边走一边听音乐。","Tā yìbiān zǒu yìbiān tīng yīnyuè.","He listens to music while walking."],
+"一定":["我一定来。","Wǒ yídìng lái.","I will definitely come."],
+"一共":["一共多少钱？","Yígòng duōshao qián?","How much is it altogether?"],
+"一会儿":["请等一会儿。","Qǐng děng yíhuìr.","Please wait a moment."],
+"一样":["我们的包一样。","Wǒmen de bāo yíyàng.","Our bags are the same."],
+"一直":["雨一直下。","Yǔ yìzhí xià.","It keeps raining."],
+"以前":["以前我住在北京。","Yǐqián wǒ zhù zài Běijīng.","I used to live in Beijing."],
+"音乐":["这个音乐真好听。","Zhège yīnyuè zhēn hǎotīng.","This music sounds great."],
+"银行":["银行几点开门？","Yínháng jǐ diǎn kāi mén?","What time does the bank open?"],
+"饮料":["你想喝什么饮料？","Nǐ xiǎng hē shénme yǐnliào?","What would you like to drink?"],
+"应该":["你应该多休息。","Nǐ yīnggāi duō xiūxi.","You should rest more."],
+"影响":["别影响他学习。","Bié yǐngxiǎng tā xuéxí.","Don't disturb his studying."],
+"用":["我用手机看新闻。","Wǒ yòng shǒujī kàn xīnwén.","I read the news on my phone."],
+"游戏":["孩子们在玩游戏。","Háizimen zài wán yóuxì.","The kids are playing games."],
+"有名":["这家饭店很有名。","Zhè jiā fàndiàn hěn yǒumíng.","This restaurant is famous."],
+"又":["他又迟到了。","Tā yòu chídào le.","He's late again."],
+"遇到":["我在路上遇到了老师。","Wǒ zài lùshang yùdào le lǎoshī.","I ran into my teacher on the way."],
+"元":["这个十元。","Zhège shí yuán.","This is ten yuan."],
+"愿意":["我愿意帮助你。","Wǒ yuànyì bāngzhù nǐ.","I'm willing to help you."],
+"月亮":["今晚的月亮很漂亮。","Jīnwǎn de yuèliang hěn piàoliang.","The moon is beautiful tonight."],
+"越":["雨越下越大。","Yǔ yuè xià yuè dà.","The rain is getting heavier and heavier."],
+"站":["下一站是火车站。","Xià yí zhàn shì huǒchēzhàn.","The next stop is the train station."],
+"张":["桌子上有一张地图。","Zhuōzi shàng yǒu yì zhāng dìtú.","There's a map on the table."],
+"着急":["别着急，慢慢来。","Bié zháojí, mànmàn lái.","Don't worry, take your time."],
+"照顾":["她在家照顾孩子。","Tā zài jiā zhàogù háizi.","She takes care of the kids at home."],
+"照片":["这张照片真好看。","Zhè zhāng zhàopiàn zhēn hǎokàn.","This photo looks great."],
+"照相机":["我的照相机是新的。","Wǒ de zhàoxiàngjī shì xīn de.","My camera is new."],
+"只":["我只有十块钱。","Wǒ zhǐ yǒu shí kuài qián.","I only have ten yuan."],
+"中间":["他坐在中间。","Tā zuò zài zhōngjiān.","He sits in the middle."],
+"中文":["我在学中文。","Wǒ zài xué Zhōngwén.","I'm learning Chinese."],
+"终于":["我终于完成了！","Wǒ zhōngyú wánchéng le!","I finally finished!"],
+"种":["这种茶很好喝。","Zhè zhǒng chá hěn hǎohē.","This kind of tea is delicious."],
+"重要":["健康最重要。","Jiànkāng zuì zhòngyào.","Health is the most important thing."],
+"周末":["周末你做什么？","Zhōumò nǐ zuò shénme?","What do you do on weekends?"],
+"主要":["我主要在家工作。","Wǒ zhǔyào zài jiā gōngzuò.","I mainly work from home."],
+"注意":["上课请注意听。","Shàngkè qǐng zhùyì tīng.","Please pay attention in class."],
+"自己":["我自己做饭。","Wǒ zìjǐ zuò fàn.","I cook for myself."],
+"自行车":["我的自行车是蓝色的。","Wǒ de zìxíngchē shì lánsè de.","My bike is blue."],
+"总是":["他总是很忙。","Tā zǒngshì hěn máng.","He's always busy."],
+"嘴":["张开嘴，让医生看看。","Zhāngkāi zuǐ, ràng yīshēng kànkan.","Open your mouth so the doctor can look."],
+"最后":["最后他来了。","Zuìhòu tā lái le.","In the end, he came."],
+"最近":["你最近怎么样？","Nǐ zuìjìn zěnmeyàng?","How have you been lately?"],
+"作业":["我晚上做作业。","Wǒ wǎnshang zuò zuòyè.","I do my homework in the evening."],
+"才":["他十点才起床。","Tā shí diǎn cái qǐchuáng.","He didn't get up until ten."],
+"而且":["这个菜好吃，而且便宜。","Zhège cài hǎochī, érqiě piányi.","This dish is tasty, and cheap too."],
+"词典":["这本词典很有用。","Zhè běn cídiǎn hěn yǒuyòng.","This dictionary is very useful."],
+"以后":["下课以后我们去玩。","Xiàkè yǐhòu wǒmen qù wán.","After class, let's go have fun."],
+"越来越":["天气越来越冷。","Tiānqì yuèláiyuè lěng.","The weather is getting colder and colder."],
+/* ---------- HSK 4 examples ---------- */
+"爱情":["这是一个爱情故事。","Zhè shì yí gè àiqíng gùshi.","This is a love story."],
+"安排":["经理安排了一个会议。","Jīnglǐ ānpái le yí gè huìyì.","The manager arranged a meeting."],
+"安全":["开车要注意安全。","Kāichē yào zhùyì ānquán.","Pay attention to safety when driving."],
+"按时":["请按时吃药。","Qǐng ànshí chī yào.","Please take the medicine on time."],
+"按照":["请按照要求做。","Qǐng ànzhào yāoqiú zuò.","Please do it according to the requirements."],
+"暗":["房间里太暗了。","Fángjiān lǐ tài àn le.","The room is too dark."],
+"包括":["价格包括早饭。","Jiàgé bāokuò zǎofàn.","The price includes breakfast."],
+"保护":["我们要保护环境。","Wǒmen yào bǎohù huánjìng.","We must protect the environment."],
+"保证":["我保证明天来。","Wǒ bǎozhèng míngtiān lái.","I promise to come tomorrow."],
+"报道":["我看了这条新闻报道。","Wǒ kàn le zhè tiáo xīnwén bàodào.","I read this news report."],
+"报名":["我报名参加了比赛。","Wǒ bàomíng cānjiā le bǐsài.","I signed up for the competition."],
+"抱":["妈妈抱着孩子。","Māma bàozhe háizi.","Mom is holding the child."],
+"抱歉":["很抱歉，我来晚了。","Hěn bàoqiàn, wǒ lái wǎn le.","Sorry, I'm late."],
+"倍":["价格是去年的两倍。","Jiàgé shì qùnián de liǎng bèi.","The price is double last year's."],
+"本来":["我本来想去的。","Wǒ běnlái xiǎng qù de.","I originally wanted to go."],
+"笨":["我不笨，只是慢。","Wǒ bú bèn, zhǐshì màn.","I'm not stupid, just slow."],
+"毕业":["他明年大学毕业。","Tā míngnián dàxué bìyè.","He graduates from college next year."],
+"遍":["请再读一遍。","Qǐng zài dú yí biàn.","Please read it one more time."],
+"标准":["他的发音很标准。","Tā de fāyīn hěn biāozhǔn.","His pronunciation is very standard."],
+"表达":["他很会表达自己。","Tā hěn huì biǎodá zìjǐ.","He is good at expressing himself."],
+"表格":["请填这张表格。","Qǐng tián zhè zhāng biǎogé.","Please fill in this form."],
+"表扬":["老师表扬了她。","Lǎoshī biǎoyáng le tā.","The teacher praised her."],
+"饼干":["我买了一盒饼干。","Wǒ mǎi le yì hé bǐnggān.","I bought a box of biscuits."],
+"并且":["他会说汉语，并且说得很好。","Tā huì shuō Hànyǔ, bìngqiě shuō de hěn hǎo.","He speaks Chinese, and speaks it well."],
+"博士":["她是法律博士。","Tā shì fǎlǜ bóshì.","She has a doctorate in law."],
+"不得不":["下雨了，我不得不回家。","Xiàyǔ le, wǒ bùdébù huí jiā.","It rained, so I had to go home."],
+"不管":["不管多难，我都要学。","Bùguǎn duō nán, wǒ dōu yào xué.","No matter how hard, I will learn it."],
+"不过":["我想去，不过没时间。","Wǒ xiǎng qù, búguò méi shíjiān.","I want to go, but I have no time."],
+"不仅":["她不仅聪明，还很努力。","Tā bùjǐn cōngming, hái hěn nǔlì.","She is not only smart but also hardworking."],
+"部分":["大部分人都同意。","Dà bùfen rén dōu tóngyì.","Most people agree."],
+"擦":["请把桌子擦一下。","Qǐng bǎ zhuōzi cā yíxià.","Please wipe the table."],
+"猜":["你猜我多大？","Nǐ cāi wǒ duō dà?","Guess how old I am?"],
+"材料":["请准备好材料。","Qǐng zhǔnbèi hǎo cáiliào.","Please prepare the materials."],
+"参观":["我们参观了博物馆。","Wǒmen cānguān le bówùguǎn.","We visited the museum."],
+"差不多":["我们差不多高。","Wǒmen chàbuduō gāo.","We are about the same height."],
+"尝":["你尝尝这个菜。","Nǐ chángchang zhège cài.","Try this dish."],
+"场":["昨天有一场比赛。","Zuótiān yǒu yì chǎng bǐsài.","There was a match yesterday."],
+"超过":["人数超过了一百。","Rénshù chāoguò le yìbǎi.","The number of people exceeded one hundred."],
+"吵":["外面太吵了。","Wàimiàn tài chǎo le.","It's too noisy outside."],
+"成功":["他的表演很成功。","Tā de biǎoyǎn hěn chénggōng.","His performance was a success."],
+"成熟":["这些葡萄熟了，很成熟。","Zhèxiē pútao shú le, hěn chéngshú.","These grapes are ripe and mature."],
+"成为":["她成为了一名医生。","Tā chéngwéi le yì míng yīshēng.","She became a doctor."],
+"诚实":["他是个诚实的孩子。","Tā shì gè chéngshí de háizi.","He is an honest child."],
+"乘坐":["我们乘坐飞机去北京。","Wǒmen chéngzuò fēijī qù Běijīng.","We take a plane to Beijing."],
+"吃惊":["听到这个消息，我很吃惊。","Tīngdào zhège xiāoxi, wǒ hěn chījīng.","I was shocked to hear this news."],
+"抽烟":["这里不能抽烟。","Zhèlǐ bù néng chōuyān.","Smoking is not allowed here."],
+"出差":["爸爸去上海出差了。","Bàba qù Shànghǎi chūchāi le.","Dad went to Shanghai on a business trip."],
+"出发":["我们八点出发。","Wǒmen bā diǎn chūfā.","We set out at eight."],
+"出生":["她出生在北京。","Tā chūshēng zài Běijīng.","She was born in Beijing."],
+"传真":["请给我发一份传真。","Qǐng gěi wǒ fā yí fèn chuánzhēn.","Please send me a fax."],
+"窗户":["请打开窗户。","Qǐng dǎkāi chuānghu.","Please open the window."],
+"从来":["我从来没去过中国。","Wǒ cónglái méi qùguo Zhōngguó.","I have never been to China."],
+"粗心":["他太粗心了，又写错了。","Tā tài cūxīn le, yòu xiě cuò le.","He's too careless — he wrote it wrong again."],
+"答案":["这个答案是对的。","Zhège dá'àn shì duì de.","This answer is correct."],
+"打扮":["她打扮得很漂亮。","Tā dǎban de hěn piàoliang.","She dressed up beautifully."],
+"打扰":["对不起，打扰你了。","Duìbuqǐ, dǎrǎo nǐ le.","Sorry to disturb you."],
+"打印":["请帮我打印这份材料。","Qǐng bāng wǒ dǎyìn zhè fèn cáiliào.","Please print this document for me."],
+"打折":["这些衣服在打折。","Zhèxiē yīfu zài dǎzhé.","These clothes are on sale."],
+"打针":["孩子怕打针。","Háizi pà dǎzhēn.","The child is afraid of injections."],
+"大夫":["大夫说我感冒了。","Dàifu shuō wǒ gǎnmào le.","The doctor said I have a cold."],
+"大概":["他大概八点到。","Tā dàgài bā diǎn dào.","He will probably arrive at eight."],
+"大使馆":["大使馆在市中心。","Dàshǐguǎn zài shì zhōngxīn.","The embassy is in the city center."],
+"大约":["大约有五十个人。","Dàyuē yǒu wǔshí gè rén.","There are about fifty people."],
+"代表":["他代表公司讲话。","Tā dàibiǎo gōngsī jiǎnghuà.","He spoke on behalf of the company."],
+"代替":["谁能代替他去？","Shéi néng dàitì tā qù?","Who can go in his place?"],
+"戴":["她戴着一块手表。","Tā dàizhe yí kuài shǒubiǎo.","She is wearing a watch."],
+"弹":["她会弹钢琴。","Tā huì tán gāngqín.","She can play the piano."],
+"当":["他想当老师。","Tā xiǎng dāng lǎoshī.","He wants to be a teacher."],
+"当地":["我喜欢吃当地的菜。","Wǒ xǐhuan chī dāngdì de cài.","I like eating the local food."],
+"当时":["当时我不在家。","Dāngshí wǒ bú zài jiā.","At that time I wasn't home."],
+"刀":["小心，刀很快。","Xiǎoxīn, dāo hěn kuài.","Careful, the knife is sharp."],
+"导游":["导游给我们介绍长城。","Dǎoyóu gěi wǒmen jièshào Chángchéng.","The guide introduced the Great Wall to us."],
+"到处":["到处都是人。","Dàochù dōu shì rén.","There are people everywhere."],
+"到底":["你到底去不去？","Nǐ dàodǐ qù bu qù?","Are you going or not, after all?"],
+"道歉":["他向我道歉了。","Tā xiàng wǒ dàoqiàn le.","He apologized to me."],
+"地球":["地球是我们的家。","Dìqiú shì wǒmen de jiā.","The Earth is our home."],
+"地址":["请写下你的地址。","Qǐng xiě xià nǐ de dìzhǐ.","Please write down your address."],
+"得意":["他考了第一，很得意。","Tā kǎo le dì-yī, hěn déyì.","He came first in the exam and is very pleased."],
+"底":["我月底回来。","Wǒ yuèdǐ huílai.","I'll be back at the end of the month."],
+"调查":["警察在调查这件事。","Jǐngchá zài diàochá zhè jiàn shì.","The police are investigating this matter."],
+"掉":["杯子掉在地上了。","Bēizi diào zài dìshang le.","The cup fell on the floor."],
+"丢":["我把钥匙丢了。","Wǒ bǎ yàoshi diū le.","I lost my keys."],
+"动作":["他的动作很快。","Tā de dòngzuò hěn kuài.","His movements are fast."],
+"堵车":["路上堵车，我迟到了。","Lùshang dǔchē, wǒ chídào le.","There was a traffic jam, so I was late."],
+"肚子":["我肚子疼。","Wǒ dùzi téng.","My stomach hurts."],
+"断":["铅笔断了。","Qiānbǐ duàn le.","The pencil broke."],
+"对话":["请读这段对话。","Qǐng dú zhè duàn duìhuà.","Please read this dialogue."],
+"对面":["银行在马路对面。","Yínháng zài mǎlù duìmiàn.","The bank is across the street."],
+"顿":["我们吃了一顿好饭。","Wǒmen chī le yí dùn hǎo fàn.","We had a good meal."],
+"朵":["她买了一朵花。","Tā mǎi le yì duǒ huā.","She bought a flower."],
+"儿童":["这是儿童图书馆。","Zhè shì értóng túshūguǎn.","This is a children's library."],
+"而":["他喜欢茶，而我喜欢咖啡。","Tā xǐhuan chá, ér wǒ xǐhuan kāfēi.","He likes tea, while I like coffee."],
+"发生":["昨天发生了什么？","Zuótiān fāshēng le shénme?","What happened yesterday?"],
+"发展":["城市发展得很快。","Chéngshì fāzhǎn de hěn kuài.","The city is developing fast."],
+"法律":["人人都要懂法律。","Rénrén dōu yào dǒng fǎlǜ.","Everyone should understand the law."],
+"翻译":["请帮我翻译这句话。","Qǐng bāng wǒ fānyì zhè jù huà.","Please translate this sentence for me."],
+"烦恼":["别为小事烦恼。","Bié wèi xiǎoshì fánnǎo.","Don't worry about small things."],
+"反对":["我反对这个办法。","Wǒ fǎnduì zhège bànfǎ.","I oppose this method."],
+"反映":["这本书反映了当时的生活。","Zhè běn shū fǎnyìng le dāngshí de shēnghuó.","This book reflects life at that time."],
+"范围":["这不在我的工作范围。","Zhè bú zài wǒ de gōngzuò fànwéi.","This is not within my job scope."],
+"方法":["这个方法很好用。","Zhège fāngfǎ hěn hǎoyòng.","This method works well."],
+"方面":["他在很多方面都很优秀。","Tā zài hěn duō fāngmiàn dōu hěn yōuxiù.","He is excellent in many aspects."],
+"方向":["我们走错方向了。","Wǒmen zǒu cuò fāngxiàng le.","We went in the wrong direction."],
+"访问":["他去中国访问了。","Tā qù Zhōngguó fǎngwèn le.","He went to visit China."],
+"放弃":["别放弃，继续努力！","Bié fàngqì, jìxù nǔlì!","Don't give up — keep trying!"],
+"放暑假":["我们七月放暑假。","Wǒmen qī yuè fàng shǔjià.","Our summer vacation starts in July."],
+"分之":["三分之一的学生是女生。","Sān fēnzhī yī de xuésheng shì nǚshēng.","One third of the students are girls."],
+"份":["请给我一份报纸。","Qǐng gěi wǒ yí fèn bàozhǐ.","Please give me a newspaper."],
+"丰富":["晚会的节目很丰富。","Wǎnhuì de jiémù hěn fēngfù.","The evening's program is rich and varied."],
+"风景":["山上的风景真美。","Shān shàng de fēngjǐng zhēn měi.","The scenery on the mountain is beautiful."],
+"否则":["快点儿，否则要迟到了。","Kuài diǎnr, fǒuzé yào chídào le.","Hurry up, otherwise we'll be late."],
+"符合":["他符合这个工作的要求。","Tā fúhé zhège gōngzuò de yāoqiú.","He meets the requirements of this job."],
+"父亲":["我父亲是律师。","Wǒ fùqīn shì lǜshī.","My father is a lawyer."],
+"负责":["她负责这个项目。","Tā fùzé zhège xiàngmù.","She is in charge of this project."],
+"复印":["请复印两份。","Qǐng fùyìn liǎng fèn.","Please make two copies."],
+"复杂":["这个问题很复杂。","Zhège wèntí hěn fùzá.","This problem is complicated."],
+"富":["这个地方越来越富。","Zhège dìfang yuèláiyuè fù.","This place is getting richer and richer."],
+"改变":["他改变了主意。","Tā gǎibiàn le zhǔyi.","He changed his mind."],
+"感动":["这个故事让我很感动。","Zhège gùshi ràng wǒ hěn gǎndòng.","This story moved me deeply."],
+"感觉":["我感觉好多了。","Wǒ gǎnjué hǎo duō le.","I feel much better."],
+"感情":["他们的感情很好。","Tāmen de gǎnqíng hěn hǎo.","They have a close relationship."],
+"感谢":["非常感谢你的帮助。","Fēicháng gǎnxiè nǐ de bāngzhù.","Thank you very much for your help."],
+"干":["你在干什么？","Nǐ zài gàn shénme?","What are you doing?"],
+"干杯":["来，为友谊干杯！","Lái, wèi yǒuyì gānbēi!","Come, a toast to friendship!"],
+"干燥":["冬天空气很干燥。","Dōngtiān kōngqì hěn gānzào.","The air is very dry in winter."],
+"刚刚":["他刚刚出去。","Tā gānggāng chūqu.","He just went out."],
+"高级":["这是一家高级饭店。","Zhè shì yì jiā gāojí fàndiàn.","This is a high-class hotel."],
+"各":["各位同学，大家好！","Gè wèi tóngxué, dàjiā hǎo!","Hello, everyone!"],
+"工具":["笔是写字的工具。","Bǐ shì xiě zì de gōngjù.","A pen is a tool for writing."],
+"工资":["他的工资不低。","Tā de gōngzī bù dī.","His salary is not low."],
+"公里":["机场离这儿三十公里。","Jīchǎng lí zhèr sānshí gōnglǐ.","The airport is thirty kilometers away."],
+"共同":["我们有共同的爱好。","Wǒmen yǒu gòngtóng de àihào.","We have common hobbies."],
+"购物":["周末我们去购物吧。","Zhōumò wǒmen qù gòuwù ba.","Let's go shopping this weekend."],
+"够":["钱不够了。","Qián bú gòu le.","There isn't enough money."],
+"估计":["我估计他不会来。","Wǒ gūjì tā bú huì lái.","I estimate he won't come."],
+"孤单":["一个人生活有点儿孤单。","Yí gè rén shēnghuó yǒudiǎnr gūdān.","Living alone is a bit lonely."],
+"鼓励":["老师鼓励我们多说汉语。","Lǎoshī gǔlì wǒmen duō shuō Hànyǔ.","The teacher encourages us to speak more Chinese."],
+"鼓掌":["大家为她鼓掌。","Dàjiā wèi tā gǔzhǎng.","Everyone applauded for her."],
+"故意":["他不是故意的。","Tā bú shì gùyì de.","He didn't do it on purpose."],
+"顾客":["顾客对服务很满意。","Gùkè duì fúwù hěn mǎnyì.","The customers are satisfied with the service."],
+"挂":["把照片挂在墙上。","Bǎ zhàopiàn guà zài qiáng shàng.","Hang the photo on the wall."],
+"关键":["关键是要坚持。","Guānjiàn shì yào jiānchí.","The key is to persist."],
+"观众":["观众们都站了起来。","Guānzhòngmen dōu zhàn le qǐlai.","The audience all stood up."],
+"管理":["他管理这家公司。","Tā guǎnlǐ zhè jiā gōngsī.","He manages this company."],
+"光":["别光说不做。","Bié guāng shuō bú zuò.","Don't just talk without doing."],
+"广播":["请听机场广播。","Qǐng tīng jīchǎng guǎngbō.","Please listen to the airport announcement."],
+"广告":["电视上广告太多。","Diànshì shàng guǎnggào tài duō.","There are too many ads on TV."],
+"逛":["我们去逛街吧。","Wǒmen qù guàng jiē ba.","Let's go window shopping."],
+"规定":["按规定，这里不能停车。","Àn guīdìng, zhèlǐ bù néng tíngchē.","According to the rules, no parking here."],
+"国际":["这是一个国际机场。","Zhè shì yí gè guójì jīchǎng.","This is an international airport."],
+"果然":["他果然来了。","Tā guǒrán lái le.","Sure enough, he came."],
+"过程":["学习是一个长过程。","Xuéxí shì yí gè cháng guòchéng.","Learning is a long process."],
+"咳嗽":["他感冒了，一直咳嗽。","Tā gǎnmào le, yìzhí késou.","He has a cold and keeps coughing."],
+"海洋":["海洋比陆地大。","Hǎiyáng bǐ lùdì dà.","The ocean is bigger than the land."],
+"害羞":["她见到生人就害羞。","Tā jiàndào shēngrén jiù hàixiū.","She gets shy around strangers."],
+"寒假":["寒假我要回老家。","Hánjià wǒ yào huí lǎojiā.","I'm going back to my hometown for winter vacation."],
+"汗":["他跑得满头大汗。","Tā pǎo de mǎn tóu dà hàn.","He ran until he was covered in sweat."],
+"航班":["航班推迟了一个小时。","Hángbān tuīchí le yí gè xiǎoshí.","The flight was delayed an hour."],
+"好处":["多运动对身体有好处。","Duō yùndòng duì shēntǐ yǒu hǎochù.","Exercising more is good for your health."],
+"好像":["天好像要下雨了。","Tiān hǎoxiàng yào xiàyǔ le.","It looks like it's going to rain."],
+"号码":["你的电话号码是多少？","Nǐ de diànhuà hàomǎ shì duōshao?","What's your phone number?"],
+"合格":["他的成绩合格了。","Tā de chéngjì hégé le.","His results passed the standard."],
+"合适":["这件衣服很合适。","Zhè jiàn yīfu hěn héshì.","This clothing fits well."],
+"盒子":["盒子里是什么？","Hézi lǐ shì shénme?","What's in the box?"],
+"猴子":["猴子在树上玩。","Hóuzi zài shù shàng wán.","The monkeys are playing in the tree."],
+"后悔":["我后悔没去。","Wǒ hòuhuǐ méi qù.","I regret not going."],
+"厚":["这本书很厚。","Zhè běn shū hěn hòu.","This book is thick."],
+"忽然":["忽然下起了大雨。","Hūrán xià qǐ le dà yǔ.","Suddenly it started raining heavily."],
+"互相":["朋友要互相帮助。","Péngyou yào hùxiāng bāngzhù.","Friends should help each other."],
+"护士":["护士给我打了针。","Hùshi gěi wǒ dǎ le zhēn.","The nurse gave me an injection."],
+"怀疑":["我怀疑他没说真话。","Wǒ huáiyí tā méi shuō zhēnhuà.","I suspect he didn't tell the truth."],
+"回忆":["这是美好的回忆。","Zhè shì měihǎo de huíyì.","This is a beautiful memory."],
+"活动":["学校有很多活动。","Xuéxiào yǒu hěn duō huódòng.","The school has many activities."],
+"活泼":["这个孩子很活泼。","Zhège háizi hěn huópō.","This child is lively."],
+"火":["小心火！","Xiǎoxīn huǒ!","Watch out for the fire!"],
+"获得":["她获得了第一名。","Tā huòdé le dì-yī míng.","She won first place."],
+"积极":["他工作很积极。","Tā gōngzuò hěn jījí.","He works very actively."],
+"积累":["学语言要积累词语。","Xué yǔyán yào jīlěi cíyǔ.","Learning a language requires accumulating vocabulary."],
+"基础":["他的汉语基础很好。","Tā de Hànyǔ jīchǔ hěn hǎo.","His Chinese foundation is solid."],
+"激动":["赢了比赛，大家很激动。","Yíng le bǐsài, dàjiā hěn jīdòng.","Everyone was excited about winning the match."],
+"及时":["幸好你及时到了。","Xìnghǎo nǐ jíshí dào le.","Luckily you arrived in time."],
+"即使":["即使下雨，我也去。","Jíshǐ xiàyǔ, wǒ yě qù.","Even if it rains, I'll still go."],
+"极其":["这件事极其重要。","Zhè jiàn shì jíqí zhòngyào.","This matter is extremely important."],
+"集合":["我们八点在门口集合。","Wǒmen bā diǎn zài ménkǒu jíhé.","We assemble at the gate at eight."],
+"计划":["你有什么计划？","Nǐ yǒu shénme jìhuà?","What plans do you have?"],
+"记者":["记者在采访他。","Jìzhě zài cǎifǎng tā.","The reporter is interviewing him."],
+"技术":["他的技术很好。","Tā de jìshù hěn hǎo.","His skills are excellent."],
+"既然":["既然来了，就坐一会儿吧。","Jìrán lái le, jiù zuò yíhuìr ba.","Since you're here, sit for a while."],
+"继续":["休息一下，我们继续。","Xiūxi yíxià, wǒmen jìxù.","Take a break, then we'll continue."],
+"寄":["我要寄一封信。","Wǒ yào jì yì fēng xìn.","I need to mail a letter."],
+"加班":["他今天晚上要加班。","Tā jīntiān wǎnshang yào jiābān.","He has to work overtime tonight."],
+"加油站":["前面有一个加油站。","Qiánmiàn yǒu yí gè jiāyóuzhàn.","There's a gas station ahead."],
+"家具":["我们买了新家具。","Wǒmen mǎi le xīn jiājù.","We bought new furniture."],
+"假":["这个消息是假的。","Zhège xiāoxi shì jiǎ de.","This news is fake."],
+"价格":["这里的价格很便宜。","Zhèlǐ de jiàgé hěn piányi.","The prices here are cheap."],
+"坚持":["他坚持每天跑步。","Tā jiānchí měitiān pǎobù.","He persists in running every day."],
+"减肥":["她在减肥，不吃糖。","Tā zài jiǎnféi, bù chī táng.","She's on a diet and doesn't eat sugar."],
+"减少":["我们要减少浪费。","Wǒmen yào jiǎnshǎo làngfèi.","We must reduce waste."],
+"将来":["将来我想当医生。","Jiānglái wǒ xiǎng dāng yīshēng.","In the future I want to be a doctor."],
+"奖金":["他这个月拿到了奖金。","Tā zhège yuè nádào le jiǎngjīn.","He got a bonus this month."],
+"降低":["价格降低了。","Jiàgé jiàngdī le.","The price has come down."],
+"交":["请明天交作业。","Qǐng míngtiān jiāo zuòyè.","Please hand in your homework tomorrow."],
+"交流":["我们常用汉语交流。","Wǒmen cháng yòng Hànyǔ jiāoliú.","We often communicate in Chinese."],
+"交通":["这里的交通很方便。","Zhèlǐ de jiāotōng hěn fāngbiàn.","Transportation here is convenient."],
+"骄傲":["我们为你骄傲。","Wǒmen wèi nǐ jiāo'ào.","We are proud of you."],
+"饺子":["春节我们吃饺子。","Chūnjié wǒmen chī jiǎozi.","We eat dumplings at Spring Festival."],
+"教授":["王教授的课很有意思。","Wáng jiàoshòu de kè hěn yǒu yìsi.","Professor Wang's class is interesting."],
+"教育":["父母很重视教育。","Fùmǔ hěn zhòngshì jiàoyù.","Parents value education highly."],
+"接受":["他接受了我的建议。","Tā jiēshòu le wǒ de jiànyì.","He accepted my suggestion."],
+"节约":["我们要节约用水。","Wǒmen yào jiéyuē yòng shuǐ.","We should conserve water."],
+"结果":["考试结果出来了。","Kǎoshì jiéguǒ chūlai le.","The exam results are out."],
+"解释":["请解释一下这个词。","Qǐng jiěshì yíxià zhège cí.","Please explain this word."],
+"尽管":["尽管很累，他还在工作。","Jǐnguǎn hěn lèi, tā hái zài gōngzuò.","Although tired, he's still working."],
+"紧张":["考试前我很紧张。","Kǎoshì qián wǒ hěn jǐnzhāng.","I'm nervous before exams."],
+"进行":["会议正在进行。","Huìyì zhèngzài jìnxíng.","The meeting is in progress."],
+"禁止":["这里禁止照相。","Zhèlǐ jìnzhǐ zhàoxiàng.","Photography is forbidden here."],
+"京剧":["爷爷爱看京剧。","Yéye ài kàn jīngjù.","Grandpa loves watching Peking opera."],
+"经济":["经济发展得很快。","Jīngjì fāzhǎn de hěn kuài.","The economy is developing quickly."],
+"经历":["这是一次难忘的经历。","Zhè shì yí cì nánwàng de jīnglì.","This was an unforgettable experience."],
+"经验":["他有很多工作经验。","Tā yǒu hěn duō gōngzuò jīngyàn.","He has a lot of work experience."],
+"精彩":["昨晚的演出很精彩。","Zuó wǎn de yǎnchū hěn jīngcǎi.","Last night's performance was wonderful."],
+"精神":["他今天精神很好。","Tā jīntiān jīngshén hěn hǎo.","He is in good spirits today."],
+"警察":["警察帮我找到了钱包。","Jǐngchá bāng wǒ zhǎodào le qiánbāo.","The police helped me find my wallet."],
+"竞争":["竞争越来越激烈。","Jìngzhēng yuèláiyuè jīliè.","Competition is getting fiercer."],
+"竟然":["他竟然忘了我的名字。","Tā jìngrán wàng le wǒ de míngzi.","He actually forgot my name."],
+"镜子":["她在照镜子。","Tā zài zhào jìngzi.","She is looking in the mirror."],
+"究竟":["这究竟是怎么回事？","Zhè jiūjìng shì zěnme huí shì?","What on earth is going on?"],
+"举办":["学校举办了运动会。","Xuéxiào jǔbàn le yùndònghuì.","The school held a sports meet."],
+"拒绝":["他拒绝了我的邀请。","Tā jùjué le wǒ de yāoqǐng.","He declined my invitation."],
+"距离":["两个城市距离很远。","Liǎng gè chéngshì jùlí hěn yuǎn.","The two cities are far apart."],
+"开玩笑":["别生气，我开玩笑呢。","Bié shēngqì, wǒ kāi wánxiào ne.","Don't be angry — I'm joking."],
+"看法":["你有什么看法？","Nǐ yǒu shénme kànfǎ?","What's your opinion?"],
+"考虑":["让我考虑一下。","Ràng wǒ kǎolǜ yíxià.","Let me think it over."],
+"科学":["他对科学很感兴趣。","Tā duì kēxué hěn gǎn xìngqù.","He is very interested in science."],
+"棵":["门口有一棵大树。","Ménkǒu yǒu yì kē dà shù.","There's a big tree by the gate."],
+"可怜":["这只小猫真可怜。","Zhè zhī xiǎo māo zhēn kělián.","This kitten is so pitiful."],
+"可是":["我想买，可是太贵了。","Wǒ xiǎng mǎi, kěshì tài guì le.","I want to buy it, but it's too expensive."],
+"可惜":["真可惜，你没来。","Zhēn kěxī, nǐ méi lái.","What a pity you didn't come."],
+"肯定":["他肯定会同意的。","Tā kěndìng huì tóngyì de.","He will definitely agree."],
+"空气":["山里的空气很新鲜。","Shān lǐ de kōngqì hěn xīnxiān.","The air in the mountains is fresh."],
+"恐怕":["恐怕我去不了了。","Kǒngpà wǒ qù bu liǎo le.","I'm afraid I can't go."],
+"苦":["这个药很苦。","Zhège yào hěn kǔ.","This medicine is bitter."],
+"宽":["这条路很宽。","Zhè tiáo lù hěn kuān.","This road is wide."],
+"困":["我很困，想睡觉。","Wǒ hěn kùn, xiǎng shuìjiào.","I'm sleepy and want to go to bed."],
+"困难":["遇到困难别害怕。","Yùdào kùnnan bié hàipà.","Don't be afraid when you meet difficulties."],
+"扩大":["公司在扩大业务。","Gōngsī zài kuòdà yèwù.","The company is expanding its business."],
+"垃圾桶":["请把垃圾扔进垃圾桶。","Qǐng bǎ lājī rēng jìn lājītǒng.","Please throw the trash into the bin."],
+"拉":["请帮我拉门。","Qǐng bāng wǒ lā mén.","Please pull the door for me."],
+"辣":["四川菜很辣。","Sìchuān cài hěn là.","Sichuan food is spicy."],
+"来不及":["快走吧，来不及了！","Kuài zǒu ba, láibují le!","Let's go — there's no time left!"],
+"来得及":["别急，还来得及。","Bié jí, hái láidejí.","Don't worry, there's still time."],
+"懒":["他太懒了，不想动。","Tā tài lǎn le, bù xiǎng dòng.","He's too lazy to move."],
+"浪费":["别浪费时间。","Bié làngfèi shíjiān.","Don't waste time."],
+"浪漫":["这是一个浪漫的故事。","Zhè shì yí gè làngmàn de gùshi.","This is a romantic story."],
+"老虎":["动物园里有老虎。","Dòngwùyuán lǐ yǒu lǎohǔ.","There are tigers in the zoo."],
+"冷静":["遇到问题要冷静。","Yùdào wèntí yào lěngjìng.","Stay calm when problems arise."],
+"礼貌":["这个孩子很有礼貌。","Zhège háizi hěn yǒu lǐmào.","This child is very polite."],
+"理发":["我下午去理发。","Wǒ xiàwǔ qù lǐfà.","I'm getting a haircut this afternoon."],
+"理解":["我理解你的意思。","Wǒ lǐjiě nǐ de yìsi.","I understand what you mean."],
+"理想":["她的理想是当作家。","Tā de lǐxiǎng shì dāng zuòjiā.","Her dream is to become a writer."],
+"力气":["他力气很大。","Tā lìqi hěn dà.","He is very strong."],
+"厉害":["你太厉害了！","Nǐ tài lìhai le!","You're amazing!"],
+"例如":["我爱吃水果，例如苹果。","Wǒ ài chī shuǐguǒ, lìrú píngguǒ.","I love fruit — apples, for example."],
+"俩":["我们俩是好朋友。","Wǒmen liǎ shì hǎo péngyou.","The two of us are good friends."],
+"连":["他忙得连饭都没吃。","Tā máng de lián fàn dōu méi chī.","He was so busy he didn't even eat."],
+"联系":["有事请联系我。","Yǒu shì qǐng liánxì wǒ.","Contact me if anything comes up."],
+"凉快":["秋天很凉快。","Qiūtiān hěn liángkuai.","Autumn is nice and cool."],
+"亮":["这个灯很亮。","Zhège dēng hěn liàng.","This lamp is bright."],
+"另外":["另外，别忘了带伞。","Lìngwài, bié wàng le dài sǎn.","Also, don't forget your umbrella."],
+"流泪":["她感动得流泪了。","Tā gǎndòng de liúlèi le.","She was moved to tears."],
+"流利":["他汉语说得很流利。","Tā Hànyǔ shuō de hěn liúlì.","He speaks Chinese fluently."],
+"流行":["这首歌很流行。","Zhè shǒu gē hěn liúxíng.","This song is very popular."],
+"留":["请给我留个电话。","Qǐng gěi wǒ liú gè diànhuà.","Please leave me your phone number."],
+"律师":["他哥哥是律师。","Tā gēge shì lǜshī.","His brother is a lawyer."],
+"乱":["房间太乱了，收拾一下。","Fángjiān tài luàn le, shōushi yíxià.","The room is too messy — tidy it up."],
+"麻烦":["麻烦你帮我一下。","Máfan nǐ bāng wǒ yíxià.","May I trouble you to help me?"],
+"马虎":["做事不能马虎。","Zuò shì bù néng mǎhu.","You can't be careless in your work."],
+"满":["杯子里的水满了。","Bēizi lǐ de shuǐ mǎn le.","The cup is full of water."],
+"毛巾":["用毛巾擦擦手。","Yòng máojīn cāca shǒu.","Dry your hands with the towel."],
+"美丽":["这是一座美丽的城市。","Zhè shì yí zuò měilì de chéngshì.","This is a beautiful city."],
+"梦":["我昨晚做了个梦。","Wǒ zuó wǎn zuò le gè mèng.","I had a dream last night."],
+"密码":["请输入密码。","Qǐng shūrù mìmǎ.","Please enter the password."],
+"免费":["这里的茶是免费的。","Zhèlǐ de chá shì miǎnfèi de.","The tea here is free."],
+"民族":["中国有五十六个民族。","Zhōngguó yǒu wǔshíliù gè mínzú.","China has fifty-six ethnic groups."],
+"母亲":["母亲节快到了。","Mǔqīnjié kuài dào le.","Mother's Day is coming soon."],
+"目的":["我们的目的是学好汉语。","Wǒmen de mùdì shì xué hǎo Hànyǔ.","Our goal is to master Chinese."],
+"耐心":["老师很有耐心。","Lǎoshī hěn yǒu nàixīn.","The teacher is very patient."],
+"难道":["难道你忘了吗？","Nándào nǐ wàng le ma?","Don't tell me you forgot?"],
+"难受":["我头疼，很难受。","Wǒ tóu téng, hěn nánshòu.","I have a headache and feel terrible."],
+"内":["一周内给你答案。","Yì zhōu nèi gěi nǐ dá'àn.","You'll have an answer within a week."],
+"内容":["这本书的内容很有趣。","Zhè běn shū de nèiróng hěn yǒuqù.","The content of this book is interesting."],
+"能力":["她的工作能力很强。","Tā de gōngzuò nénglì hěn qiáng.","Her work ability is strong."],
+"年龄":["请写下你的年龄。","Qǐng xiě xià nǐ de niánlíng.","Please write down your age."],
+"农村":["爷爷住在农村。","Yéye zhù zài nóngcūn.","Grandpa lives in the countryside."],
+"弄":["我把手机弄坏了。","Wǒ bǎ shǒujī nòng huài le.","I broke my phone."],
+"暖和":["春天天气暖和了。","Chūntiān tiānqì nuǎnhuo le.","The weather gets warm in spring."],
+"偶尔":["我偶尔去看电影。","Wǒ ǒu'ěr qù kàn diànyǐng.","I occasionally go to the movies."],
+"排列":["请按顺序排列。","Qǐng àn shùnxù páiliè.","Please arrange them in order."],
+"判断":["你自己判断吧。","Nǐ zìjǐ pànduàn ba.","Judge for yourself."],
+"陪":["我陪你去医院。","Wǒ péi nǐ qù yīyuàn.","I'll go with you to the hospital."],
+"批评":["老师批评了他。","Lǎoshī pīpíng le tā.","The teacher criticized him."],
+"皮肤":["她的皮肤很好。","Tā de pífū hěn hǎo.","Her skin is very nice."],
+"脾气":["他脾气很好，不生气。","Tā píqi hěn hǎo, bù shēngqì.","He has a good temper and doesn't get angry."],
+"篇":["我写了一篇文章。","Wǒ xiě le yì piān wénzhāng.","I wrote an article."],
+"骗":["他骗了我。","Tā piàn le wǒ.","He deceived me."],
+"乒乓球":["我们打乒乓球吧。","Wǒmen dǎ pīngpāngqiú ba.","Let's play table tennis."],
+"平时":["我平时七点起床。","Wǒ píngshí qī diǎn qǐchuáng.","I usually get up at seven."],
+"破":["袜子破了一个洞。","Wàzi pò le yí gè dòng.","The sock has a hole in it."],
+"普遍":["手机现在很普遍。","Shǒujī xiànzài hěn pǔbiàn.","Mobile phones are very common now."],
+"其次":["首先是安全，其次是速度。","Shǒuxiān shì ānquán, qícì shì sùdù.","Safety first, speed second."],
+"其中":["十个人，其中三个是学生。","Shí gè rén, qízhōng sān gè shì xuésheng.","Ten people, three of whom are students."],
+"气候":["这里的气候很好。","Zhèlǐ de qìhòu hěn hǎo.","The climate here is very nice."],
+"千万":["千万别忘了带护照。","Qiānwàn bié wàng le dài hùzhào.","Whatever you do, don't forget your passport."],
+"签证":["我在办签证。","Wǒ zài bàn qiānzhèng.","I'm applying for a visa."],
+"墙":["墙上有一张地图。","Qiáng shàng yǒu yì zhāng dìtú.","There's a map on the wall."],
+"敲":["有人在敲门。","Yǒu rén zài qiāo mén.","Someone is knocking at the door."],
+"桥":["河上有一座桥。","Hé shàng yǒu yí zuò qiáo.","There's a bridge over the river."],
+"巧克力":["她爱吃巧克力。","Tā ài chī qiǎokèlì.","She loves chocolate."],
+"亲戚":["春节我们去看亲戚。","Chūnjié wǒmen qù kàn qīnqi.","We visit relatives at Spring Festival."],
+"轻":["这个包很轻。","Zhège bāo hěn qīng.","This bag is light."],
+"轻松":["考完试，我很轻松。","Kǎo wán shì, wǒ hěn qīngsōng.","After the exam, I feel relaxed."],
+"情况":["现在情况怎么样？","Xiànzài qíngkuàng zěnmeyàng?","How is the situation now?"],
+"请客":["今天我请客。","Jīntiān wǒ qǐngkè.","Today it's my treat."],
+"穷":["他小时候家里很穷。","Tā xiǎoshíhou jiā lǐ hěn qióng.","His family was poor when he was young."],
+"区别":["这两个词有什么区别？","Zhè liǎng gè cí yǒu shénme qūbié?","What's the difference between these two words?"],
+"取":["我去银行取钱。","Wǒ qù yínháng qǔ qián.","I'm going to the bank to withdraw money."],
+"全部":["我全部都懂了。","Wǒ quánbù dōu dǒng le.","I understood all of it."],
+"缺点":["每个人都有缺点。","Měi gè rén dōu yǒu quēdiǎn.","Everyone has shortcomings."],
+"缺少":["我们缺少时间。","Wǒmen quēshǎo shíjiān.","We lack time."],
+"却":["他答应了，却没来。","Tā dāying le, què méi lái.","He agreed, yet didn't come."],
+"确实":["这个菜确实好吃。","Zhège cài quèshí hǎochī.","This dish is indeed delicious."],
+"群":["湖上有一群鸟。","Hú shàng yǒu yì qún niǎo.","There's a flock of birds on the lake."],
+"然而":["他很累，然而还在坚持。","Tā hěn lèi, rán'ér hái zài jiānchí.","He is tired; however, he keeps going."],
+"热闹":["春节的时候很热闹。","Chūnjié de shíhou hěn rènao.","It's very lively during Spring Festival."],
+"人民币":["这个多少人民币？","Zhège duōshao rénmínbì?","How much is this in RMB?"],
+"任何":["有任何问题都可以问我。","Yǒu rènhé wèntí dōu kěyǐ wèn wǒ.","Ask me if you have any questions."],
+"任务":["我们完成了任务。","Wǒmen wánchéng le rènwu.","We completed the task."],
+"扔":["别乱扔垃圾。","Bié luàn rēng lājī.","Don't litter."],
+"仍然":["他仍然住在老地方。","Tā réngrán zhù zài lǎo dìfang.","He still lives in the old place."],
+"日记":["她每天写日记。","Tā měitiān xiě rìjì.","She writes a diary every day."],
+"入口":["入口在那边。","Rùkǒu zài nàbiān.","The entrance is over there."],
+"软":["这个沙发很软。","Zhège shāfā hěn ruǎn.","This sofa is soft."],
+"散步":["晚饭后我们去散步。","Wǎnfàn hòu wǒmen qù sànbù.","We take a walk after dinner."],
+"森林":["森林里有很多动物。","Sēnlín lǐ yǒu hěn duō dòngwù.","There are many animals in the forest."],
+"沙发":["猫在沙发上睡觉。","Māo zài shāfā shàng shuìjiào.","The cat is sleeping on the sofa."],
+"伤心":["别伤心，会好起来的。","Bié shāngxīn, huì hǎo qǐlai de.","Don't be sad — things will get better."],
+"商量":["这件事我们商量一下。","Zhè jiàn shì wǒmen shāngliang yíxià.","Let's discuss this matter."],
+"稍微":["请稍微等一下。","Qǐng shāowēi děng yíxià.","Please wait just a moment."],
+"社会":["他对社会问题很关心。","Tā duì shèhuì wèntí hěn guānxīn.","He cares about social issues."],
+"申请":["我申请了奖学金。","Wǒ shēnqǐng le jiǎngxuéjīn.","I applied for a scholarship."],
+"深":["这条河很深。","Zhè tiáo hé hěn shēn.","This river is deep."],
+"甚至":["他忙得甚至忘了吃饭。","Tā máng de shènzhì wàng le chīfàn.","He was so busy he even forgot to eat."],
+"生活":["我很喜欢这里的生活。","Wǒ hěn xǐhuan zhèlǐ de shēnghuó.","I really like life here."],
+"生命":["水是生命之源。","Shuǐ shì shēngmìng zhī yuán.","Water is the source of life."],
+"省":["坐地铁能省很多时间。","Zuò dìtiě néng shěng hěn duō shíjiān.","Taking the subway saves a lot of time."],
+"剩":["还剩两个苹果。","Hái shèng liǎng gè píngguǒ.","There are two apples left."],
+"失败":["失败是成功之母。","Shībài shì chénggōng zhī mǔ.","Failure is the mother of success."],
+"失望":["别让妈妈失望。","Bié ràng māma shīwàng.","Don't let Mom down."],
+"师傅":["师傅，去机场多少钱？","Shīfu, qù jīchǎng duōshao qián?","Driver, how much to the airport?"],
+"狮子":["狮子是森林之王。","Shīzi shì sēnlín zhī wáng.","The lion is the king of the forest."],
+"湿润":["雨后空气很湿润。","Yǔ hòu kōngqì hěn shīrùn.","The air is moist after the rain."],
+"十分":["我十分满意。","Wǒ shífēn mǎnyì.","I am fully satisfied."],
+"实际":["这个计划很实际。","Zhège jìhuà hěn shíjì.","This plan is very practical."],
+"实在":["我实在太累了。","Wǒ shízài tài lèi le.","I'm honestly too tired."],
+"食品":["超市里有很多食品。","Chāoshì lǐ yǒu hěn duō shípǐn.","The supermarket has lots of food products."],
+"使用":["请正确使用工具。","Qǐng zhèngquè shǐyòng gōngjù.","Please use the tools correctly."],
+"世纪":["我们生活在二十一世纪。","Wǒmen shēnghuó zài èrshíyī shìjì.","We live in the 21st century."],
+"市场":["妈妈去市场买菜。","Māma qù shìchǎng mǎi cài.","Mom goes to the market to buy groceries."],
+"适合":["这个工作很适合你。","Zhège gōngzuò hěn shìhé nǐ.","This job suits you well."],
+"适应":["我已经适应了这里的生活。","Wǒ yǐjīng shìyìng le zhèlǐ de shēnghuó.","I've already adapted to life here."],
+"收":["我收到了你的信。","Wǒ shōudào le nǐ de xìn.","I received your letter."],
+"收入":["他的收入不错。","Tā de shōurù búcuò.","His income is quite good."],
+"收拾":["我在收拾行李。","Wǒ zài shōushi xíngli.","I'm packing my luggage."],
+"首都":["北京是中国的首都。","Běijīng shì Zhōngguó de shǒudū.","Beijing is the capital of China."],
+"首先":["首先，我们复习生词。","Shǒuxiān, wǒmen fùxí shēngcí.","First, let's review the new words."],
+"受不了":["太热了，我受不了了。","Tài rè le, wǒ shòu bu liǎo le.","It's too hot — I can't stand it."],
+"受到":["他受到了大家的欢迎。","Tā shòudào le dàjiā de huānyíng.","He was welcomed by everyone."],
+"售货员":["售货员很热情。","Shòuhuòyuán hěn rèqíng.","The salesperson is very friendly."],
+"输":["我们输了这场比赛。","Wǒmen shū le zhè chǎng bǐsài.","We lost this match."],
+"熟悉":["我对这里很熟悉。","Wǒ duì zhèlǐ hěn shúxī.","I'm very familiar with this place."],
+"数量":["数量不多，质量很好。","Shùliàng bù duō, zhìliàng hěn hǎo.","The quantity is small, but the quality is good."],
+"数字":["请记住这个数字。","Qǐng jìzhù zhège shùzì.","Please remember this number."],
+"帅":["他长得很帅。","Tā zhǎng de hěn shuài.","He is very handsome."],
+"顺便":["回来时顺便买点牛奶。","Huílai shí shùnbiàn mǎi diǎn niúnǎi.","Pick up some milk on your way back."],
+"顺利":["祝你一切顺利！","Zhù nǐ yíqiè shùnlì!","Wishing you all the best!"],
+"顺序":["请按顺序上车。","Qǐng àn shùnxù shàng chē.","Please board in order."],
+"说明":["请看使用说明。","Qǐng kàn shǐyòng shuōmíng.","Please read the instructions."],
+"硕士":["她在读硕士。","Tā zài dú shuòshì.","She is studying for a master's degree."],
+"死":["我的花死了。","Wǒ de huā sǐ le.","My flower died."],
+"速度":["火车的速度很快。","Huǒchē de sùdù hěn kuài.","The train's speed is very fast."],
+"塑料袋":["少用塑料袋。","Shǎo yòng sùliàodài.","Use fewer plastic bags."],
+"酸":["这个葡萄有点儿酸。","Zhège pútao yǒudiǎnr suān.","These grapes are a bit sour."],
+"算":["这次不算，再来一次。","Zhè cì bú suàn, zài lái yí cì.","This one doesn't count — try again."],
+"随便":["随便坐，别客气。","Suíbiàn zuò, bié kèqi.","Sit anywhere — make yourself at home."],
+"随着":["随着时间，他慢慢好了。","Suízhe shíjiān, tā mànmàn hǎo le.","With time, he slowly got better."],
+"孙子":["爷爷很爱他的孙子。","Yéye hěn ài tā de sūnzi.","Grandpa loves his grandson very much."],
+"所有":["所有人都到了。","Suǒyǒu rén dōu dào le.","Everyone has arrived."],
+"台":["我买了一台电脑。","Wǒ mǎi le yì tái diànnǎo.","I bought a computer."],
+"抬":["请帮我抬桌子。","Qǐng bāng wǒ tái zhuōzi.","Please help me carry the table."],
+"态度":["他的态度很认真。","Tā de tàidu hěn rènzhēn.","His attitude is very serious."],
+"谈":["我们谈谈这个问题。","Wǒmen tántan zhège wèntí.","Let's talk about this problem."],
+"汤":["这个汤很好喝。","Zhège tāng hěn hǎohē.","This soup is delicious."],
+"躺":["他躺在床上看书。","Tā tǎng zài chuáng shàng kàn shū.","He lies on the bed reading."],
+"趟":["我去了一趟超市。","Wǒ qù le yí tàng chāoshì.","I made a trip to the supermarket."],
+"讨论":["我们讨论一下计划。","Wǒmen tǎolùn yíxià jìhuà.","Let's discuss the plan."],
+"讨厌":["我讨厌堵车。","Wǒ tǎoyàn dǔchē.","I hate traffic jams."],
+"特点":["这个城市有什么特点？","Zhège chéngshì yǒu shénme tèdiǎn?","What are this city's characteristics?"],
+"提供":["饭店提供免费早餐。","Fàndiàn tígōng miǎnfèi zǎocān.","The hotel provides free breakfast."],
+"提前":["请提前十分钟到。","Qǐng tíqián shí fēnzhōng dào.","Please arrive ten minutes early."],
+"提醒":["请提醒我吃药。","Qǐng tíxǐng wǒ chī yào.","Please remind me to take my medicine."],
+"填空":["请完成填空题。","Qǐng wánchéng tiánkòng tí.","Please complete the fill-in-the-blank questions."],
+"条件":["这里的学习条件很好。","Zhèlǐ de xuéxí tiáojiàn hěn hǎo.","The study conditions here are very good."],
+"停止":["雨停止了。","Yǔ tíngzhǐ le.","The rain has stopped."],
+"挺":["这个电影挺好看的。","Zhège diànyǐng tǐng hǎokàn de.","This movie is quite good."],
+"通过":["他通过了考试。","Tā tōngguò le kǎoshì.","He passed the exam."],
+"通知":["请通知大家开会。","Qǐng tōngzhī dàjiā kāihuì.","Please notify everyone about the meeting."],
+"同情":["我很同情他。","Wǒ hěn tóngqíng tā.","I feel sorry for him."],
+"推":["请推门进来。","Qǐng tuī mén jìnlai.","Please push the door to come in."],
+"推迟":["会议推迟到明天。","Huìyì tuīchí dào míngtiān.","The meeting is postponed to tomorrow."],
+"脱":["进门请脱鞋。","Jìn mén qǐng tuō xié.","Please take off your shoes when entering."],
+"袜子":["我买了三双袜子。","Wǒ mǎi le sān shuāng wàzi.","I bought three pairs of socks."],
+"完全":["我完全同意。","Wǒ wánquán tóngyì.","I completely agree."],
+"网球":["她每周打网球。","Tā měi zhōu dǎ wǎngqiú.","She plays tennis every week."],
+"网站":["这个网站很有用。","Zhège wǎngzhàn hěn yǒuyòng.","This website is very useful."],
+"往往":["他往往工作到很晚。","Tā wǎngwǎng gōngzuò dào hěn wǎn.","He often works until very late."],
+"危险":["过马路要小心，很危险。","Guò mǎlù yào xiǎoxīn, hěn wēixiǎn.","Be careful crossing the road — it's dangerous."],
+"味道":["这个菜味道不错。","Zhège cài wèidào búcuò.","This dish tastes good."],
+"温度":["今天温度很低。","Jīntiān wēndù hěn dī.","The temperature is low today."],
+"文章":["这篇文章写得很好。","Zhè piān wénzhāng xiě de hěn hǎo.","This article is well written."],
+"握手":["他们见面握手。","Tāmen jiànmiàn wòshǒu.","They shook hands when they met."],
+"污染":["空气污染很严重。","Kōngqì wūrǎn hěn yánzhòng.","The air pollution is serious."],
+"无":["这个公园无门票。","Zhège gōngyuán wú ménpiào.","This park has no entrance fee."],
+"无聊":["周末在家很无聊。","Zhōumò zài jiā hěn wúliáo.","Staying home on weekends is boring."],
+"无论":["无论多晚，他都等你。","Wúlùn duō wǎn, tā dōu děng nǐ.","No matter how late, he'll wait for you."],
+"误会":["对不起，这是个误会。","Duìbuqǐ, zhè shì gè wùhuì.","Sorry, this is a misunderstanding."],
+"吸引":["长城吸引了很多游客。","Chángchéng xīyǐn le hěn duō yóukè.","The Great Wall attracts many tourists."],
+"洗衣机":["洗衣机坏了。","Xǐyījī huài le.","The washing machine is broken."],
+"西红柿":["我爱吃西红柿鸡蛋。","Wǒ ài chī xīhóngshì jīdàn.","I love tomato with eggs."],
+"咸":["这个汤太咸了。","Zhège tāng tài xián le.","This soup is too salty."],
+"现代":["这是一座现代城市。","Zhè shì yí zuò xiàndài chéngshì.","This is a modern city."],
+"限制":["这里限制速度。","Zhèlǐ xiànzhì sùdù.","Speed is limited here."],
+"羡慕":["我很羡慕你会说汉语。","Wǒ hěn xiànmù nǐ huì shuō Hànyǔ.","I envy that you can speak Chinese."],
+"相反":["他的看法和我相反。","Tā de kànfǎ hé wǒ xiāngfǎn.","His view is the opposite of mine."],
+"香":["花很香。","Huā hěn xiāng.","The flowers smell fragrant."],
+"详细":["请详细说明一下。","Qǐng xiángxì shuōmíng yíxià.","Please explain in detail."],
+"响":["电话响了。","Diànhuà xiǎng le.","The phone is ringing."],
+"消息":["我有一个好消息。","Wǒ yǒu yí gè hǎo xiāoxi.","I have good news."],
+"小说":["她喜欢看小说。","Tā xǐhuan kàn xiǎoshuō.","She likes reading novels."],
+"效果":["这个药效果很好。","Zhège yào xiàoguǒ hěn hǎo.","This medicine works very well."],
+"笑话":["他讲了一个笑话。","Tā jiǎng le yí gè xiàohua.","He told a joke."],
+"心情":["今天我心情很好。","Jīntiān wǒ xīnqíng hěn hǎo.","I'm in a good mood today."],
+"辛苦":["您辛苦了！","Nín xīnkǔ le!","Thank you for your hard work!"],
+"信任":["朋友之间要互相信任。","Péngyou zhījiān yào hùxiāng xìnrèn.","Friends should trust each other."],
+"信心":["我对自己有信心。","Wǒ duì zìjǐ yǒu xìnxīn.","I have confidence in myself."],
+"行":["行，就这么办。","Xíng, jiù zhème bàn.","OK, let's do it that way."],
+"醒":["我每天六点醒。","Wǒ měitiān liù diǎn xǐng.","I wake up at six every day."],
+"兴奋":["要去旅行了，我很兴奋。","Yào qù lǚxíng le, wǒ hěn xīngfèn.","I'm excited about the upcoming trip."],
+"幸福":["祝你们幸福！","Zhù nǐmen xìngfú!","Wishing you happiness!"],
+"性别":["请填写姓名和性别。","Qǐng tiánxiě xìngmíng hé xìngbié.","Please fill in your name and gender."],
+"性格":["她性格很开朗。","Tā xìnggé hěn kāilǎng.","She has a cheerful personality."],
+"修":["我的自行车要修了。","Wǒ de zìxíngchē yào xiū le.","My bike needs repairing."],
+"许多":["公园里有许多人。","Gōngyuán lǐ yǒu xǔduō rén.","There are many people in the park."],
+"血":["他的手出血了。","Tā de shǒu chūxiě le.","His hand is bleeding."],
+"压力":["工作压力有点儿大。","Gōngzuò yālì yǒudiǎnr dà.","The work pressure is a bit heavy."],
+"牙膏":["牙膏用完了。","Yágāo yòng wán le.","The toothpaste is used up."],
+"亚洲":["中国在亚洲。","Zhōngguó zài Yàzhōu.","China is in Asia."],
+"呀":["快来呀！","Kuài lái ya!","Come quickly!"],
+"严格":["这位老师要求很严格。","Zhè wèi lǎoshī yāoqiú hěn yángé.","This teacher has strict requirements."],
+"严重":["他的病不严重。","Tā de bìng bù yánzhòng.","His illness isn't serious."],
+"研究生":["她是一名研究生。","Tā shì yì míng yánjiūshēng.","She is a graduate student."],
+"盐":["汤里放点儿盐。","Tāng lǐ fàng diǎnr yán.","Put a little salt in the soup."],
+"演出":["晚上的演出七点开始。","Wǎnshang de yǎnchū qī diǎn kāishǐ.","The evening performance starts at seven."],
+"演员":["她是一位有名的演员。","Tā shì yí wèi yǒumíng de yǎnyuán.","She is a famous actress."],
+"阳光":["今天阳光很好。","Jīntiān yángguāng hěn hǎo.","The sunshine is lovely today."],
+"养成":["要养成早睡的习惯。","Yào yǎngchéng zǎo shuì de xíguàn.","Develop the habit of going to bed early."],
+"样子":["这个帽子的样子很好看。","Zhège màozi de yàngzi hěn hǎokàn.","This hat's style looks great."],
+"邀请":["谢谢你的邀请。","Xièxie nǐ de yāoqǐng.","Thank you for your invitation."],
+"钥匙":["钥匙在包里。","Yàoshi zài bāo lǐ.","The keys are in the bag."],
+"也许":["他也许不知道。","Tā yěxǔ bù zhīdào.","Maybe he doesn't know."],
+"叶子":["秋天叶子变黄了。","Qiūtiān yèzi biàn huáng le.","The leaves turn yellow in autumn."],
+"页":["请看第十页。","Qǐng kàn dì shí yè.","Please look at page ten."],
+"一切":["一切都准备好了。","Yíqiè dōu zhǔnbèi hǎo le.","Everything is ready."],
+"以":["请以你的名字命名。","Qǐng yǐ nǐ de míngzi mìngmíng.","Please name it after yourself."],
+"亿":["中国有十四亿人。","Zhōngguó yǒu shísì yì rén.","China has 1.4 billion people."],
+"艺术":["她喜欢艺术。","Tā xǐhuan yìshù.","She likes art."],
+"意见":["你有什么意见？","Nǐ yǒu shénme yìjiàn?","What opinions do you have?"],
+"因此":["他病了，因此没来。","Tā bìng le, yīncǐ méi lái.","He was ill, and therefore didn't come."],
+"引起":["这件事引起了大家的注意。","Zhè jiàn shì yǐnqǐ le dàjiā de zhùyì.","This matter attracted everyone's attention."],
+"印象":["他给我的印象很好。","Tā gěi wǒ de yìnxiàng hěn hǎo.","He made a good impression on me."],
+"赢":["我们赢了！","Wǒmen yíng le!","We won!"],
+"硬":["这个床太硬了。","Zhège chuáng tài yìng le.","This bed is too hard."],
+"永远":["我们永远是朋友。","Wǒmen yǒngyuǎn shì péngyou.","We will always be friends."],
+"勇敢":["她是个勇敢的女孩。","Tā shì gè yǒnggǎn de nǚhái.","She is a brave girl."],
+"优点":["他的优点是认真。","Tā de yōudiǎn shì rènzhēn.","His strength is that he's conscientious."],
+"优秀":["她是一名优秀的学生。","Tā shì yì míng yōuxiù de xuésheng.","She is an outstanding student."],
+"幽默":["他很幽默，常讲笑话。","Tā hěn yōumò, cháng jiǎng xiàohua.","He's humorous and often tells jokes."],
+"尤其":["我爱运动，尤其是游泳。","Wǒ ài yùndòng, yóuqí shì yóuyǒng.","I love sports, especially swimming."],
+"由":["这件事由我负责。","Zhè jiàn shì yóu wǒ fùzé.","I am responsible for this matter."],
+"由于":["由于下雨，比赛推迟了。","Yóuyú xiàyǔ, bǐsài tuīchí le.","Due to rain, the match was postponed."],
+"有趣":["这个故事很有趣。","Zhège gùshi hěn yǒuqù.","This story is very interesting."],
+"友好":["这里的人很友好。","Zhèlǐ de rén hěn yǒuhǎo.","The people here are friendly."],
+"友谊":["为我们的友谊干杯！","Wèi wǒmen de yǒuyì gānbēi!","A toast to our friendship!"],
+"于是":["下雨了，于是我们回家了。","Xiàyǔ le, yúshì wǒmen huí jiā le.","It rained, so we went home."],
+"愉快":["祝你旅途愉快！","Zhù nǐ lǚtú yúkuài!","Have a pleasant journey!"],
+"与":["这与你无关。","Zhè yǔ nǐ wúguān.","This has nothing to do with you."],
+"羽毛球":["我们去打羽毛球吧。","Wǒmen qù dǎ yǔmáoqiú ba.","Let's go play badminton."],
+"语法":["汉语语法不太难。","Hànyǔ yǔfǎ bú tài nán.","Chinese grammar isn't too hard."],
+"语言":["语言是交流的工具。","Yǔyán shì jiāoliú de gōngjù.","Language is a tool for communication."],
+"预习":["请预习第五课。","Qǐng yùxí dì wǔ kè.","Please preview lesson five."],
+"原来":["原来是你呀！","Yuánlái shì nǐ ya!","So it was you!"],
+"原谅":["请原谅我的错误。","Qǐng yuánliàng wǒ de cuòwù.","Please forgive my mistake."],
+"原因":["迟到的原因是堵车。","Chídào de yuányīn shì dǔchē.","The reason for being late was the traffic."],
+"圆":["十五的月亮很圆。","Shíwǔ de yuèliang hěn yuán.","The moon on the 15th is very round."],
+"约会":["他今晚有个约会。","Tā jīn wǎn yǒu gè yuēhuì.","He has a date tonight."],
+"阅读":["我每天阅读半小时。","Wǒ měitiān yuèdú bàn xiǎoshí.","I read for half an hour every day."],
+"允许":["这里不允许抽烟。","Zhèlǐ bù yǔnxǔ chōuyān.","Smoking is not allowed here."],
+"杂志":["我订了一本杂志。","Wǒ dìng le yì běn zázhì.","I subscribed to a magazine."],
+"咱们":["咱们一起去吧。","Zánmen yìqǐ qù ba.","Let's go together."],
+"暂时":["他暂时住在朋友家。","Tā zànshí zhù zài péngyou jiā.","He's staying at a friend's place for now."],
+"脏":["手太脏了，快去洗。","Shǒu tài zāng le, kuài qù xǐ.","Your hands are dirty — go wash them."],
+"责任":["这是我的责任。","Zhè shì wǒ de zérèn.","This is my responsibility."],
+"增加":["学生人数增加了。","Xuésheng rénshù zēngjiā le.","The number of students has increased."],
+"增长":["经济增长很快。","Jīngjì zēngzhǎng hěn kuài.","The economy is growing fast."],
+"窄":["这条街很窄。","Zhè tiáo jiē hěn zhǎi.","This street is narrow."],
+"长城":["我们去爬长城吧。","Wǒmen qù pá Chángchéng ba.","Let's go climb the Great Wall."],
+"长江":["长江是中国最长的河。","Chángjiāng shì Zhōngguó zuì cháng de hé.","The Yangtze is China's longest river."],
+"招聘":["公司在招聘新人。","Gōngsī zài zhāopìn xīnrén.","The company is recruiting new people."],
+"著名":["他是著名的作家。","Tā shì zhùmíng de zuòjiā.","He is a famous writer."],
+"真正":["他是真正的朋友。","Tā shì zhēnzhèng de péngyou.","He is a true friend."],
+"整理":["我在整理房间。","Wǒ zài zhěnglǐ fángjiān.","I'm tidying up the room."],
+"整齐":["书放得很整齐。","Shū fàng de hěn zhěngqí.","The books are neatly arranged."],
+"正常":["一切都很正常。","Yíqiè dōu hěn zhèngcháng.","Everything is normal."],
+"正好":["你来得正好。","Nǐ lái de zhènghǎo.","You came at just the right time."],
+"正确":["你的答案是正确的。","Nǐ de dá'àn shì zhèngquè de.","Your answer is correct."],
+"正式":["明天是正式的会议。","Míngtiān shì zhèngshì de huìyì.","Tomorrow is a formal meeting."],
+"证明":["请证明你的身份。","Qǐng zhèngmíng nǐ de shēnfèn.","Please prove your identity."],
+"之":["这是成功之路。","Zhè shì chénggōng zhī lù.","This is the road to success."],
+"支持":["谢谢你的支持。","Xièxie nǐ de zhīchí.","Thank you for your support."],
+"知识":["知识就是力量。","Zhīshi jiù shì lìliang.","Knowledge is power."],
+"直接":["有问题直接问我。","Yǒu wèntí zhíjiē wèn wǒ.","Ask me directly if you have questions."],
+"值得":["这本书值得一读。","Zhè běn shū zhídé yì dú.","This book is worth reading."],
+"职业":["你的职业是什么？","Nǐ de zhíyè shì shénme?","What is your occupation?"],
+"植物":["阳台上有很多植物。","Yángtái shàng yǒu hěn duō zhíwù.","There are many plants on the balcony."],
+"只好":["没有车了，只好走路。","Méiyǒu chē le, zhǐhǎo zǒulù.","No more buses — we had to walk."],
+"只要":["只要努力，就会成功。","Zhǐyào nǔlì, jiù huì chénggōng.","As long as you work hard, you will succeed."],
+"指":["请指出我的错误。","Qǐng zhǐchū wǒ de cuòwù.","Please point out my mistakes."],
+"至少":["每天至少喝八杯水。","Měitiān zhìshǎo hē bā bēi shuǐ.","Drink at least eight glasses of water a day."],
+"制造":["这是中国制造的。","Zhè shì Zhōngguó zhìzào de.","This is made in China."],
+"质量":["这个手机质量很好。","Zhège shǒujī zhìliàng hěn hǎo.","This phone's quality is very good."],
+"重点":["这是今天的重点。","Zhè shì jīntiān de zhòngdiǎn.","This is today's key point."],
+"重视":["公司很重视质量。","Gōngsī hěn zhòngshì zhìliàng.","The company values quality highly."],
+"重新":["我们重新开始吧。","Wǒmen chóngxīn kāishǐ ba.","Let's start over."],
+"周围":["学校周围很安静。","Xuéxiào zhōuwéi hěn ānjìng.","It's quiet around the school."],
+"猪":["农村里养了很多猪。","Nóngcūn lǐ yǎng le hěn duō zhū.","Many pigs are raised in the countryside."],
+"逐渐":["天气逐渐冷了。","Tiānqì zhújiàn lěng le.","The weather is gradually getting colder."],
+"主动":["他主动帮助别人。","Tā zhǔdòng bāngzhù biérén.","He takes the initiative to help others."],
+"主意":["这是个好主意！","Zhè shì gè hǎo zhǔyi!","That's a good idea!"],
+"祝贺":["祝贺你毕业！","Zhùhè nǐ bìyè!","Congratulations on your graduation!"],
+"专门":["我专门来看你。","Wǒ zhuānmén lái kàn nǐ.","I came specially to see you."],
+"专业":["你学什么专业？","Nǐ xué shénme zhuānyè?","What's your major?"],
+"赚":["他赚了很多钱。","Tā zhuàn le hěn duō qián.","He earned a lot of money."],
+"撞":["小心别撞到墙。","Xiǎoxīn bié zhuàng dào qiáng.","Careful not to bump into the wall."],
+"准确":["他的发音很准确。","Tā de fāyīn hěn zhǔnquè.","His pronunciation is accurate."],
+"准时":["请准时到会。","Qǐng zhǔnshí dào huì.","Please arrive at the meeting on time."],
+"仔细":["请仔细检查一遍。","Qǐng zǐxì jiǎnchá yí biàn.","Please check it over carefully."],
+"自然":["我喜欢大自然。","Wǒ xǐhuan dà zìrán.","I love nature."],
+"总结":["我们总结一下今天的课。","Wǒmen zǒngjié yíxià jīntiān de kè.","Let's summarize today's lesson."],
+"租":["我租了一个房间。","Wǒ zū le yí gè fángjiān.","I rented a room."],
+"组成":["我们班由二十人组成。","Wǒmen bān yóu èrshí rén zǔchéng.","Our class is made up of twenty people."],
+"组织":["学校组织了一次旅行。","Xuéxiào zǔzhī le yí cì lǚxíng.","The school organized a trip."],
+"最好":["你最好早点儿睡。","Nǐ zuìhǎo zǎo diǎnr shuì.","You'd better sleep early."],
+"尊重":["我们要尊重老人。","Wǒmen yào zūnzhòng lǎorén.","We should respect the elderly."],
+"作者":["这本书的作者很有名。","Zhè běn shū de zuòzhě hěn yǒumíng.","The author of this book is famous."],
+"座":["那座山很高。","Nà zuò shān hěn gāo.","That mountain is high."],
+"座位":["这个座位有人吗？","Zhège zuòwèi yǒu rén ma?","Is this seat taken?"],
+"做生意":["他在上海做生意。","Tā zài Shànghǎi zuò shēngyi.","He does business in Shanghai."]
+};
+
+
+/* ============ STATE & STORAGE ============ */
+const $=s=>document.querySelector(s);
+let store={stats:{},ratings:{}};        // stats[level][mode]={seen,correct}; ratings[level]={hanzi:"s"|"t"|"n"}
+let shuffleOn=true;
+let deck=[],idx=0,mode="reading",level=1,reviewing=null;   // reviewing: null | "s" | "t" | "n"
+let homeMode="reading";                                    // mode toggle on the home screen
+let sess={s:0,t:0,n:0},given=[];                           // given[i] = rating already recorded for deck[i]
+let canvases=[],revealMode=null,drawLocked=false,eraseMode=false,answeredThisCard=false;
+
+function blankStats(){return{seen:0,correct:0}}
+function stat(lv,md){store.stats[lv]=store.stats[lv]||{};store.stats[lv][md]=store.stats[lv][md]||blankStats();return store.stats[lv][md]}
+/* per-word review counters, kept per skill like ratings */
+function rcount(lv,md){
+  store.reviews=store.reviews||{};
+  store.reviews[lv]=store.reviews[lv]||{reading:{},writing:{}};
+  const R=store.reviews[lv];
+  R.reading=R.reading||{};R.writing=R.writing||{};
+  return R[md];
+}
+/* ratings are kept separately per skill: rmap(level,"reading") and rmap(level,"writing") */
+function rmap(lv,md){
+  store.ratings[lv]=store.ratings[lv]||{reading:{},writing:{}};
+  const R=store.ratings[lv];
+  R.reading=R.reading||{};R.writing=R.writing||{};
+  return R[md];
+}
+/* per-word last-review timestamps (epoch ms), kept per skill like review counts */
+function rlast(lv,md){
+  store.lastrev=store.lastrev||{};
+  store.lastrev[lv]=store.lastrev[lv]||{reading:{},writing:{}};
+  const R=store.lastrev[lv];
+  R.reading=R.reading||{};R.writing=R.writing||{};
+  return R[md];
+}
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+/* "Words for review": a daily weighted random sample of up to 25 SOLID words.
+   Weights favor (a) words with many past reviews — percentile-scaled 0.1→1.0,
+   hitting 1.0 at the 90th percentile — and (b) stale words — 0.1 if reviewed
+   a day ago, 1.0 if 10+ days ago (never-timestamped words count as fully
+   stale). Combined weight = frequency × staleness, sampled without
+   replacement. The sample is cached per level+mode and rebuilt each day. */
+function reviewList(lv,md,words){
+  const R=rmap(lv,md);
+  const solid=words.filter(v=>R[v[0]]==="s").map(v=>v[0]);
+  store.daily=store.daily||{};
+  const key=lv+"-"+md,today=todayStr(),cached=store.daily[key];
+  if(cached&&cached.d===today)return cached.w.filter(hz=>R[hz]==="s");
+  if(!solid.length){delete store.daily[key];return [];}
+  const RC=rcount(lv,md),RL=rlast(lv,md),now=Date.now(),n=solid.length;
+  const sorted=solid.map(hz=>RC[hz]||0).sort((a,b)=>a-b);
+  const freqW=hz=>{
+    if(n<2)return 1;
+    const pct=sorted.indexOf(RC[hz]||0)/(n-1);
+    return 0.1+0.9*Math.min(1,pct/0.9);
+  };
+  const staleW=hz=>{
+    const t=RL[hz];
+    const days=t?(now-t)/864e5:10;
+    return 0.1+0.9*Math.max(0,Math.min(1,(days-1)/9));
+  };
+  /* weighted sampling without replacement (Efraimidis–Spirakis) */
+  const pick=solid.map(hz=>({hz,k:Math.pow(Math.random(),1/(freqW(hz)*staleW(hz)))}))
+                  .sort((a,b)=>b.k-a.k)
+                  .slice(0,25).map(o=>o.hz);
+  store.daily[key]={d:today,w:pick};
+  saveStore();
+  return pick;
+}
+
+/* Persistence: prefers the Claude storage API; falls back to browser localStorage
+   when the file is opened standalone (e.g. saved to the phone), so progress
+   survives between sessions either way. All access is guarded. */
+const persist={
+  async get(k){
+    try{if(window.storage){const r=await window.storage.get(k);if(r&&r.value)return r.value;}}catch(e){}
+    try{if(typeof localStorage!=="undefined"){const v=localStorage.getItem(k);if(v!=null)return v;}}catch(e){}
+    return null;
+  },
+  set(k,v){
+    try{if(window.storage)window.storage.set(k,v).catch(()=>{});}catch(e){}
+    try{if(typeof localStorage!=="undefined")localStorage.setItem(k,v);}catch(e){}
+  }
+};
+async function loadStore(){
+  try{
+    const r=await persist.get("hsk-progress");
+    if(r){
+      const p=JSON.parse(r);
+      if(p&&p.stats){
+        store=p;
+        store.ratings=store.ratings||{};
+        if(store.missed){ /* migrate old missed lists */
+          for(const lv in store.missed)(store.missed[lv]||[]).forEach(hz=>{store.ratings[lv]=store.ratings[lv]||{};store.ratings[lv][hz]=store.ratings[lv][hz]||"n";});
+          delete store.missed;
+        }
+        /* migrate flat ratings (one bucket per word) to per-mode buckets;
+           previous judgments are copied to both reading and writing */
+        for(const lv in store.ratings){
+          const R=store.ratings[lv];
+          if(R&&!R.reading&&!R.writing){
+            store.ratings[lv]={reading:Object.assign({},R),writing:Object.assign({},R)};
+          }
+        }
+        /* seed per-word review counters: any already-rated word counts as reviewed once */
+        if(!store.reviews){
+          store.reviews={};
+          for(const lv in store.ratings){
+            store.reviews[lv]={reading:{},writing:{}};
+            ["reading","writing"].forEach(md=>{
+              for(const hz in store.ratings[lv][md])store.reviews[lv][md][hz]=1;
+            });
+          }
+        }
+      }
+    }
+  }catch(e){/* first run or storage unavailable — start fresh */}
+  try{
+    const s=await persist.get("hsk-shuffle");
+    if(s)shuffleOn=s==="1";
+  }catch(e){}
+  try{
+    const m=await persist.get("hsk-mode");
+    if(m==="writing"||m==="reading")homeMode=m;
+  }catch(e){}
+  renderHome();
+}
+function saveStore(){persist.set("hsk-progress",JSON.stringify(store));}
+function saveShuffle(){persist.set("hsk-shuffle",shuffleOn?"1":"0");}
+
+/* ============ AUDIO ============ */
+function speak(hanzi){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(hanzi);
+    u.lang="zh-CN";u.rate=0.8;
+    const zh=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.toLowerCase().startsWith("zh"));
+    if(zh)u.voice=zh;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+try{speechSynthesis.getVoices();}catch(e){}
+
+/* ============ NAVIGATION ============ */
+function show(id){document.querySelectorAll(".screen").forEach(e=>e.classList.remove("active"));$("#"+id).classList.add("active");}
+
+/* ============ HOME ============ */
+const ZI={1:"一",2:"二",3:"三",4:"四"};
+function renderHome(){
+  $("#shuffle-toggle").classList.toggle("on",shuffleOn);
+  document.querySelectorAll("#mode-seg button").forEach(b=>b.classList.toggle("on",b.dataset.md===homeMode));
+  const wrap=$("#levels");wrap.innerHTML="";
+  const st=stat; /* keep name */
+  [1,2,3,4].forEach(lv=>{
+    const words=V.filter(v=>v[3]===lv);
+    const ms=stat(lv,homeMode);
+    const R=rmap(lv,homeMode);
+    const RC=rcount(lv,homeMode);
+    let solid=0,tent=0,ratedN=0,revS=0,revT=0,revN=0;
+    words.forEach(v=>{
+      const g=R[v[0]],c=RC[v[0]]||0;
+      if(g==="s"){solid++;revS+=c;}
+      else if(g==="t"){tent++;revT+=c;}
+      else if(g==="n"){ratedN++;revN+=c;}
+    });
+    const seenDistinct=solid+tent+ratedN;   /* distinct words rated in this mode — cannot over-count */
+    /* daily "words for review" sample drawn from the solid pile */
+    const review=reviewList(lv,homeMode,words).length;
+    const notl=words.length-solid-tent;
+    const pctSolid=Math.round(100*solid/words.length);   /* share of the level's words currently rated Solid */
+    const avg=(tot,n)=>n?`<i>rev/word: ${(tot/n).toFixed(1)}</i>`:"";
+    const zi=homeMode==="reading"?"认":"写";
+    const verb=homeMode==="reading"?"Read":"Write";
+    const el=document.createElement("div");
+    el.className="level";
+    el.innerHTML=`
+      <div class="level-top">
+        <div class="chop">${ZI[lv]}</div>
+        <div>
+          <h2>HSK ${lv}</h2>
+          <div class="count">${words.length} words</div>
+        </div>
+      </div>
+      <div class="bar"><i style="width:${pctSolid}%"></i></div>
+      <div class="statline">
+        <span><b>${seenDistinct}</b>/${words.length} words seen · <b>${pctSolid}%</b> of words solid</span>
+        <span>${ms.seen} review${ms.seen===1?"":"s"} in total</span>
+      </div>
+      <div class="mode-btns">
+        <button class="all-btn" data-lv="${lv}"><span class="zi">${zi}</span>${verb} all ${words.length}</button>
+      </div>
+      <div class="chips">
+        <button class="chip s" data-lv="${lv}" data-f="s" ${solid?"":"disabled"}><b>${solid}</b>Solid${avg(revS,solid)}</button>
+        <button class="chip t" data-lv="${lv}" data-f="t" ${tent?"":"disabled"}><b>${tent}</b>Tentative${avg(revT,tent)}</button>
+        <button class="chip n" data-lv="${lv}" data-f="n" ${notl?"":"disabled"}><b>${notl}</b>Not learned${avg(revN,ratedN)}</button>
+      </div>
+      ${review?`<button class="review-btn" data-lv="${lv}">↻ ${review} word${review>1?"s":""} for review</button>`:""}
+    `;
+    wrap.appendChild(el);
+  });
+  wrap.querySelectorAll(".all-btn").forEach(b=>b.onclick=()=>startSession(+b.dataset.lv,homeMode,null));
+  wrap.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
+    if(b.disabled)return;
+    startSession(+b.dataset.lv,homeMode,b.dataset.f);
+  });
+  wrap.querySelectorAll(".review-btn").forEach(b=>b.onclick=()=>startSession(+b.dataset.lv,homeMode,"x"));
+}
+document.querySelectorAll("#mode-seg button").forEach(b=>b.onclick=()=>{
+  homeMode=b.dataset.md;
+  persist.set("hsk-mode",homeMode);
+  renderHome();
+});
+$("#shuffle-toggle").onclick=()=>{shuffleOn=!shuffleOn;$("#shuffle-toggle").classList.toggle("on",shuffleOn);saveShuffle();};
+$("#reset-btn").onclick=()=>{
+  if(confirm("Reset all progress and ratings?")){store={stats:{},ratings:{}};saveStore();renderHome();}
+};
+
+/* ============ SESSION ============ */
+function startSession(lv,md,filter){
+  level=lv;mode=md;reviewing=filter;
+  const R=rmap(lv,md);
+  let cards=V.filter(v=>v[3]===lv);
+  const RC=rcount(lv,md);
+  if(filter==="s")cards=cards.filter(v=>R[v[0]]==="s");
+  else if(filter==="t")cards=cards.filter(v=>R[v[0]]==="t");
+  else if(filter==="n")cards=cards.filter(v=>(R[v[0]]||"n")==="n");
+  else if(filter==="x"){ /* today's "words for review" sample from the solid pile */
+    const dl=reviewList(lv,md,cards);
+    const byHz={};cards.forEach(c=>byHz[c[0]]=c);
+    cards=dl.map(hz=>byHz[hz]).filter(Boolean);
+  }
+  if(!cards.length){alert("No cards in this group — nice work!");return;}
+  if(shuffleOn)cards=[...cards].sort(()=>Math.random()-0.5);
+  deck=cards;idx=0;sess={s:0,t:0,n:0};given=[];
+  show("scr-card");renderCard();
+}
+$("#exit-btn").onclick=()=>{renderHome();show("scr-home");};
+$("#back-btn").onclick=()=>{
+  if(idx>0){idx--;renderCard();}   /* re-shows the previous card; re-answering replaces the earlier rating */
+};
+$("#next-btn").onclick=()=>{       /* skip without rating: the card keeps its current bucket */
+  idx++;
+  if(idx<deck.length)renderCard();else endSession();
+};
+function endSession(){
+  const total=sess.s+sess.t+sess.n;
+  $("#done-summary").textContent=total
+    ?`${total} of ${deck.length} cards rated — ✓ ${sess.s} solid · 〜 ${sess.t} tentative · ✗ ${sess.n} not learned. (HSK ${level}, ${mode} mode)`
+    :`Browsed ${deck.length} card${deck.length===1?"":"s"} without rating. (HSK ${level}, ${mode} mode)`;
+  show("scr-done");
+}
+
+function updateHead(){
+  $("#back-btn").style.visibility=idx>0?"visible":"hidden";
+  $("#prog-bar").style.width=Math.round(100*idx/deck.length)+"%";
+  const fl={s:"Solid",t:"Tentative",n:"Not learned",x:"Review"}[reviewing]||"";
+  $("#session-info").textContent=`HSK ${level} · ${mode==="reading"?"Read":"Write"}${fl?" · "+fl:""} · ${idx+1}/${deck.length}`;
+}
+
+function renderCard(){
+  updateHead();
+  revealMode=null;drawLocked=false;eraseMode=false;answeredThisCard=false;canvases=[]; /* buttons for this card don't exist yet, so no sync needed here */
+  const card=$("#card");
+  const [hz,py,en]=deck[idx];
+  card.classList.remove("swap");void card.offsetWidth;card.classList.add("swap");
+  const front=mode==="reading"?`
+      <div class="prompt-label">What does this say?</div>
+      <div class="big-hanzi ${hz.length>2?"long":""}">${hz}</div>`:`
+      <div class="prompt-label">Recall the pinyin for…</div>
+      <div class="english">${en}</div>
+      <div class="hint">Say it out loud, then flip to write the character.</div>`;
+  card.innerHTML=`
+    <div class="corner">${ZI[level]}</div>
+    <div class="face" id="face-front">${front}
+      <button class="tap-flip" id="flip">Flip card</button>
+    </div>
+    <div class="face" id="face-back" style="display:none"></div>`;
+  $("#flip").onclick=()=>flipCard(true);
+}
+/* Toggle between the two faces of the current card. The back face is built
+   once on first flip and then kept alive, so flipping to the front and back
+   again preserves the drawing canvas, revealed strokes, and example state. */
+function flipCard(toBack){
+  const card=$("#card"),f=$("#face-front"),b=$("#face-back");
+  if(toBack&&!b.dataset.built){
+    const [hz,py,en]=deck[idx];
+    if(mode==="reading")readingBack(hz,py,en);else writingBack(hz,py,en);
+    b.dataset.built="1";
+  }
+  card.classList.remove("swap");void card.offsetWidth;card.classList.add("swap");
+  f.style.display=toBack?"none":"flex";
+  b.style.display=toBack?"flex":"none";
+}
+
+function pinyinPill(hz,py){
+  return `<button class="pinyin-pill" data-hz="${hz}">🔊 ${py}</button>`;
+}
+function bindAudio(card){
+  card.querySelectorAll(".pinyin-pill").forEach(b=>b.onclick=()=>speak(b.dataset.hz));
+}
+
+/* ---------- Reading back ---------- */
+function readingBack(hz,py,en){
+  const card=$("#card");
+  const ex=EX[hz];
+  $("#face-back").innerHTML=`
+    <button class="flip-back" id="fb-btn">↺ Flip back</button>
+    <div class="small-hanzi">${hz}</div>
+    ${pinyinPill(hz,py)}
+    <div class="english">${en}</div>
+    ${ex?`<button class="ex-btn" id="ex-btn">例 Show example</button>
+    <div class="example" id="ex" style="display:none">
+      <div class="ex-hanzi" title="Tap to hear">${ex[0]} 🔊</div>
+      <div class="ex-pinyin">${ex[1]}</div>
+      <div class="ex-english">${ex[2]}</div>
+    </div>`:""}
+    <div class="answers">
+      <button class="btn-missed" id="ans-n">✗ Not learned</button>
+      <button class="btn-tent" id="ans-t">〜 Tentative</button>
+      <button class="btn-got" id="ans-s">✓ Solid</button>
+    </div>`;
+  bindAudio(card);
+  $("#fb-btn").onclick=()=>flipCard(false);
+  const eb=$("#ex-btn");
+  if(eb)eb.onclick=()=>{$("#ex").style.display="block";eb.style.display="none";};
+  const exh=card.querySelector(".ex-hanzi");
+  if(exh&&ex)exh.onclick=()=>speak(ex[0]);
+  $("#ans-n").onclick=()=>answer("n");
+  $("#ans-t").onclick=()=>answer("t");
+  $("#ans-s").onclick=()=>answer("s");
+}
+
+/* ---------- Writing back ---------- */
+function writingBack(hz,py,en){
+  const card=$("#card");
+  const ex=EX[hz];
+  const chars=[...hz].filter(c=>/\p{Script=Han}/u.test(c));
+  const avail=Math.min(card.clientWidth-40,460);
+  const size=Math.max(70,Math.min(150,Math.floor((avail-(chars.length-1)*8)/chars.length)));
+  $("#face-back").innerHTML=`
+    <button class="flip-back" id="fb-btn">↺ Flip back</button>
+    ${pinyinPill(hz,py)}
+    <div class="hint">${en} — draw the character${chars.length>1?"s":""} below</div>
+    <div class="squares" id="squares">
+      ${chars.map(()=>`<div class="sq" style="width:${size}px;height:${size}px"><canvas width="${size*2}" height="${size*2}" style="width:${size}px;height:${size}px"></canvas><div class="writer"></div></div>`).join("")}
+    </div>
+    <div class="canvas-tools">
+      <button id="peek" title="View character">👁️ View</button>
+      <button id="stroke" title="Animate stroke order">▶ Stroke</button>
+      <button id="erase" title="Erase strokes">⌫ Erase</button>
+      <button id="clear" title="Clear all">🗑️ Clear</button>
+    </div>
+    ${ex?`<button class="ex-btn" id="ex-btn">例 Show example</button>
+    <div class="example" id="ex" style="display:none">
+      <div class="ex-hanzi" title="Tap to hear">${ex[0]} 🔊</div>
+      <div class="ex-pinyin">${ex[1]}</div>
+      <div class="ex-english">${ex[2]}</div>
+    </div>`:""}
+    <div class="answers" id="wr-answers" style="display:none">
+      <button class="btn-missed" id="ans-n">✗ Not learned</button>
+      <button class="btn-tent" id="ans-t">〜 Tentative</button>
+      <button class="btn-got" id="ans-s">✓ Solid</button>
+    </div>`;
+  bindAudio(card);
+  $("#fb-btn").onclick=()=>flipCard(false);
+  const eb=$("#ex-btn");
+  if(eb)eb.onclick=()=>{$("#ex").style.display="block";eb.style.display="none";};
+  const exh=card.querySelector(".ex-hanzi");
+  if(exh&&ex)exh.onclick=()=>speak(ex[0]);
+  document.querySelectorAll("#squares canvas").forEach(cv=>setupCanvas(cv,size));
+  $("#clear").onclick=()=>{
+    canvases.forEach(c=>{c.strokes.length=0;c.ctx.clearRect(0,0,c.el.width,c.el.height);});
+    clearReveal();
+    setRevealMode(null);
+    eraseMode=false;
+    $("#erase").classList.remove("on");
+    /* full reset: write from memory again, then reveal for a fresh comparison */
+  };
+  $("#erase").onclick=()=>{
+    eraseMode=!eraseMode;
+    $("#erase").classList.toggle("on",eraseMode);
+  };
+  $("#peek").onclick=()=>{
+    if(revealMode==="view"){clearReveal();setRevealMode(null);}
+    else revealInstant(chars,size);
+  };
+  $("#stroke").onclick=()=>{
+    if(revealMode==="stroke"){clearReveal();setRevealMode(null);}
+    else revealWriting(chars,size,hz);
+  };
+  $("#ans-n").onclick=()=>answer("n");
+  $("#ans-t").onclick=()=>answer("t");
+  $("#ans-s").onclick=()=>answer("s");
+}
+
+/* ---------- Calligraphic brush engine ---------- */
+function smoothPts(raw){
+  let pts=raw.map(p=>({x:p.x,y:p.y}));
+  for(let pass=0;pass<2;pass++){
+    for(let i=1;i<pts.length-1;i++){
+      pts[i]={x:(pts[i-1].x+2*pts[i].x+pts[i+1].x)/4,y:(pts[i-1].y+2*pts[i].y+pts[i+1].y)/4};
+    }
+  }
+  return pts;
+}
+function resamplePts(pts,step){
+  const out=[pts[0]];let d=0;
+  for(let i=1;i<pts.length;i++){
+    let a=pts[i-1],b=pts[i],seg=Math.hypot(b.x-a.x,b.y-a.y);
+    while(d+seg>=step){
+      const t=(step-d)/seg;
+      const np={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};
+      out.push(np);a=np;seg=Math.hypot(b.x-a.x,b.y-a.y);d=0;
+    }
+    d+=seg;
+  }
+  out.push(pts[pts.length-1]);
+  return out;
+}
+function classifyStroke(pts,box){
+  const a=pts[0],b=pts[pts.length-1];
+  const dx=b.x-a.x,dy=b.y-a.y;
+  let len=0;
+  for(let i=1;i<pts.length;i++)len+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+  if(len<box*0.14)return"dot";                                  // 点
+  if(dx>0&&Math.abs(dy)<Math.abs(dx)*0.35)return"heng";         // 横
+  if(dy>0&&Math.abs(dx)<Math.abs(dy)*0.35)return"shu";          // 竖 (long vertical)
+  if(dx<0&&dy>0)return"pie";                                    // 撇
+  if(dx>0&&dy>0)return"na";                                     // 捺
+  if(dy<0)return"ti";                                           // 提 (rising)
+  return"heng";
+}
+/* width of the brush at progress t (0→1) along the stroke */
+/* Detects a hook at the tail of a downward stroke: if the overall stroke moves
+   down but its last ~20% moves back upward, that's a hook (like 亅 or 竖钩).
+   Returns the fractional t where the hook begins, or null if there isn't one. */
+function findHookStart(pts,box){
+  const n=pts.length;
+  if(n<8)return null;
+  const tailStart=Math.floor(n*0.8);
+  const tailNetDy=pts[n-1].y-pts[tailStart].y;
+  const overallNetDy=pts[n-1].y-pts[0].y;
+  if(overallNetDy>box*0.12&&tailNetDy<-box*0.02)return tailStart/(n-1);
+  return null;
+}
+function brushWidth(type,t,b,hookT){
+  switch(type){
+    case"heng": /* press, lift through the middle, press again */
+      return b*(1.05-0.42*Math.sin(Math.PI*t)+0.10*t);
+    case"shu":
+    case"pie":{ /* heavy start → moderate taper; a hook's up-curl thickens back up */
+      const peak=1.25,floor=0.42,hookPeak=0.62;
+      if(hookT!=null&&t>=hookT){
+        const k=(t-hookT)/Math.max(0.001,1-hookT);
+        return b*(floor+(hookPeak-floor)*k);
+      }
+      const span=hookT!=null?hookT:1;
+      const k=Math.min(1,t/Math.max(0.001,span));
+      return b*(peak-(peak-floor)*Math.pow(k,0.85));
+    }
+    case"ti":
+      return Math.max(b*0.05,b*1.15*Math.pow(1-t,0.9));
+    case"na": /* tip → heavy press → swept foot */
+      return t<0.78
+        ? b*(0.22+1.15*(t/0.78))
+        : Math.max(b*0.05,b*1.37*Math.pow(1-(t-0.78)/0.22,0.9));
+    case"dot": /* teardrop */
+      return b*(0.35+1.15*t);
+    default:return b*0.9;
+  }
+}
+function inkCap(ctx,p,r){ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();}
+function drawBrushStroke(ctx,raw,box){
+  ctx.fillStyle="#26231E";
+  if(raw.length<3){ // a tap = a dot
+    const p=raw[0];inkCap(ctx,p,Math.max(2,box*0.03));return;
+  }
+  const pts=resamplePts(smoothPts(raw),3);
+  const n=pts.length;
+  if(n<3){const p=raw[0];inkCap(ctx,p,Math.max(2,box*0.03));return;}
+  const type=classifyStroke(pts,box);
+  const hookT=(type==="shu"||type==="pie")?findHookStart(pts,box):null;
+  const b=Math.max(3,box*0.044);
+  const left=[],right=[];
+  for(let i=0;i<n;i++){
+    const p0=pts[Math.max(0,i-1)],p1=pts[Math.min(n-1,i+1)];
+    let tx=p1.x-p0.x,ty=p1.y-p0.y;
+    const m=Math.hypot(tx,ty)||1;tx/=m;ty/=m;
+    const w=brushWidth(type,i/(n-1),b,hookT)/2;
+    left.push({x:pts[i].x-ty*w,y:pts[i].y+tx*w});
+    right.push({x:pts[i].x+ty*w,y:pts[i].y-tx*w});
+  }
+  ctx.beginPath();
+  ctx.moveTo(left[0].x,left[0].y);
+  for(let i=1;i<n;i++)ctx.lineTo(left[i].x,left[i].y);
+  for(let i=n-1;i>=0;i--)ctx.lineTo(right[i].x,right[i].y);
+  ctx.closePath();ctx.fill();
+  /* round the pressed ends */
+  if(type==="heng"){inkCap(ctx,pts[0],brushWidth(type,0,b,hookT)/2);inkCap(ctx,pts[n-1],brushWidth(type,1,b,hookT)/2);}
+  else if(type==="shu"||type==="pie"||type==="ti"){inkCap(ctx,pts[0],brushWidth(type,0,b,hookT)/2);}
+  else if(type==="dot"){inkCap(ctx,pts[n-1],brushWidth(type,1,b,hookT)/2);}
+}
+
+function setupCanvas(cv,box){
+  const ctx=cv.getContext("2d");
+  if(!ctx)return;
+  ctx.scale(2,2);
+  const entry={el:cv,ctx,strokes:[]};
+  let cur=null,erasing=false;
+  const pos=e=>{
+    const r=cv.getBoundingClientRect();
+    const p=e.touches?e.touches[0]:e;
+    return{x:p.clientX-r.left,y:p.clientY-r.top};
+  };
+  const redraw=()=>{
+    ctx.clearRect(0,0,cv.width,cv.height);
+    entry.strokes.forEach(s=>drawBrushStroke(ctx,s,box));
+  };
+  entry.redraw=redraw;
+  const eraseR=Math.max(10,box*0.09); /* touch radius for removing a whole stroke */
+  const eraseAt=p=>{
+    const before=entry.strokes.length;
+    entry.strokes=entry.strokes.filter(stroke=>!stroke.some(pt=>Math.hypot(pt.x-p.x,pt.y-p.y)<eraseR));
+    if(entry.strokes.length!==before)redraw();
+  };
+  const start=e=>{
+    e.preventDefault();
+    try{cv.setPointerCapture(e.pointerId);}catch(err){}
+    if(eraseMode){erasing=true;eraseAt(pos(e));return;}
+    if(drawLocked)return;
+    cur=[pos(e)];
+  };
+  const move=e=>{
+    e.preventDefault();
+    if(eraseMode){if(erasing)eraseAt(pos(e));return;}
+    if(!cur||drawLocked)return;
+    const p=pos(e),prev=cur[cur.length-1];
+    cur.push(p);
+    /* light guide line while the finger is down; re-inked on lift */
+    ctx.strokeStyle="rgba(38,35,30,.4)";ctx.lineWidth=3;ctx.lineCap="round";
+    ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(p.x,p.y);ctx.stroke();
+  };
+  const end=()=>{
+    erasing=false;
+    if(!cur)return;
+    entry.strokes.push(cur);cur=null;redraw();
+  };
+  cv.addEventListener("pointerdown",start);
+  cv.addEventListener("pointermove",move);
+  cv.addEventListener("pointerup",end);
+  cv.addEventListener("pointercancel",end);
+  canvases.push(entry);
+}
+
+/* Renders a character with HanziWriter so View and Write look identical.
+   animate=false -> shows the finished character immediately, faint, behind
+     the canvas, so drawing stays unlocked (View).
+   animate=true  -> plays the stroke-order animation, opaque, above the
+     dimmed canvas (Write). Always clears the container first so a prior
+     reveal never lingers underneath the next one. */
+function renderHanzi(el,char,size,animate,onDone){
+  el.innerHTML="";
+  const fallback=()=>{
+    el.innerHTML=`<div class="fallback-char" style="font-size:${Math.floor(size*.8)}px">${char}</div>`;
+    onDone();
+  };
+  if(window.__hwFailed||typeof HanziWriter==="undefined"){fallback();return;}
+  try{
+    const w=HanziWriter.create(el,char,{
+      width:size,height:size,padding:6,
+      showOutline:true,showCharacter:!animate,
+      strokeColor:"#A8352A",outlineColor:"#EDD3CD",
+      strokeAnimationSpeed:1.4,delayBetweenStrokes:120,
+      onLoadCharDataError:fallback
+    });
+    if(animate)w.animateCharacter({onComplete:onDone});
+    else onDone();
+  }catch(e){fallback();}
+}
+
+/* Wipes whichever reveal (View or Stroke) is currently showing, restoring the
+   canvas to a normal, unlocked drawing state. Used both when a button is
+   toggled off and internally to reset before switching to the other mode. */
+function clearReveal(){
+  document.querySelectorAll("#squares .writer").forEach(w=>{w.innerHTML="";w.style.zIndex="";w.classList.remove("faint");});
+  canvases.forEach(c=>c.el.style.opacity=1);
+  drawLocked=false;
+}
+/* Sets revealMode and keeps the View/Stroke buttons shaded to match: darker
+   while their reveal is showing, back to normal the moment it's cleared. */
+function setRevealMode(m){
+  revealMode=m;
+  const peek=$("#peek"),stroke=$("#stroke");
+  if(peek)peek.classList.toggle("on",m==="view");
+  if(stroke)stroke.classList.toggle("on",m==="stroke");
+}
+
+/* Instant reveal: shows the target character(s) right away, no stroke-order
+   animation, rendered faint and BEHIND the canvas — so drawing stays unlocked
+   and the user's ink appears on top of the faint character as a tracing guide. */
+function revealInstant(chars,size){
+  clearReveal();
+  document.querySelectorAll("#squares .writer").forEach((el,i)=>{
+    el.classList.add("faint");
+    renderHanzi(el,chars[i],size,false,()=>{});
+  });
+  setRevealMode("view");
+  $("#wr-answers").style.display="flex";
+}
+
+function revealWriting(chars,size,hz){
+  clearReveal();
+  setRevealMode("stroke");drawLocked=true;
+  canvases.forEach(c=>c.el.style.opacity=.3);
+  const writers=[...document.querySelectorAll("#squares .writer")];
+  writers.forEach(el=>el.style.zIndex=2); /* bring the correct character above the dimmed canvas */
+  const animateAt=i=>{
+    if(i>=chars.length)return;
+    if(revealMode!=="stroke")return; /* toggled off mid-animation — stop advancing */
+    renderHanzi(writers[i],chars[i],size,true,()=>animateAt(i+1));
+  };
+  animateAt(0);
+  $("#wr-answers").style.display="flex";
+}
+
+/* ---------- Answer & advance ---------- */
+function answer(r){
+  if(answeredThisCard)return;
+  answeredThisCard=true;
+  const hz=deck[idx][0];
+  const st=stat(level,mode);
+  const prev=given[idx];
+  if(prev){ /* card was answered before (user came back) — replace the old judgment */
+    sess[prev]--;st.seen--;if(prev==="s")st.correct--;
+  }
+  if(!prev){ /* count one review per card per pass (a back-button revision is the same review) */
+    const rc=rcount(level,mode);rc[hz]=(rc[hz]||0)+1;
+  }
+  given[idx]=r;
+  st.seen++;if(r==="s")st.correct++;
+  rmap(level,mode)[hz]=r;
+  rlast(level,mode)[hz]=Date.now();
+  sess[r]++;
+  saveStore();
+  idx++;
+  if(idx<deck.length){renderCard();}
+  else{endSession();}
+}
+$("#done-home").onclick=()=>{renderHome();show("scr-home");};
+$("#done-again").onclick=()=>startSession(level,mode,reviewing);
+
+loadStore();
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
