@@ -1,9 +1,10 @@
 # Integrated Chinese study app
 
-Open `index.html` in Chrome, Edge or Safari (speech recognition needs one of these; Firefox has no recognition API). Keep the three files together:
+Open `index.html` in Chrome, Edge or Safari (speech recognition needs one of these; Firefox has no recognition API). Keep all the files together in one folder:
 
 - `index.html` — the app
-- `chapter1.js` … `chapter4.js` — Chapters 1–4 (vocab and grammar from the textbook; dialogues are original scenes using each chapter's vocabulary, not the book's text)
+- `pinyin-data.js` — character → pinyin lookup (~15,000 characters) used to show pinyin for whatever the speech recogniser hears
+- `chapter1.js` … `chapter4.js`, `chapter7.js` … `chapter10.js` — vocab and grammar from the textbook (3rd edition outline); dialogues are original scenes using each chapter's vocabulary, not the book's text
 - `chapter5.js` — Chapter 5 content (from your study guide)
 - `chapter6.js` — Chapter 6 content (draft from the textbook outline; check against your book)
 
